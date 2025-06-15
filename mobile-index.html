@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O'ahu Honeymoon Itinerary</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        /* 기본 폰트 및 커스텀 스타일 */
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8fafc; /* gray-50 */
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* 활성 탭 스타일 */
+        .tab-active {
+            background-color: #0ea5e9; /* sky-500 */
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        /* 컨텐츠 페이드인 효과 */
+        .content-card {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* 스크롤바 숨기기 */
+        #nav-container::-webkit-scrollbar {
+            display: none;
+        }
+        #nav-container {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <div id="app" class="max-w-lg mx-auto bg-white shadow-xl min-h-screen">
+        <!-- Header -->
+        <header class="sticky top-0 bg-white/80 backdrop-blur-lg z-10 shadow-sm">
+            <div class="p-4 text-center border-b">
+                <h1 class="text-2xl font-bold text-sky-600">🌴 O'ahu Honeymoon</h1>
+                <p class="text-sm text-gray-500">2025.07.07 ~ 2025.07.14</p>
+            </div>
+            <!-- Navigation Tabs -->
+            <nav id="nav-container" class="px-2 py-3 overflow-x-auto whitespace-nowrap">
+                <div id="nav-tabs" class="flex space-x-2">
+                    <!-- JS로 탭 버튼 렌더링 -->
+                </div>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main id="main-content" class="p-4">
+            <!-- JS로 일정 컨텐츠 렌더링 -->
+        </main>
+
+        <!-- Footer -->
+        <footer class="p-4 mt-8 text-center text-xs text-gray-400">
+            <p>&copy; 2025 Your Romantic Getaway. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script type="text/javascript">
+        // TypeScript/Angular 스타일로 코드 작성
+        class ItineraryApp {
+            constructor(appSelector, navSelector, contentSelector, data) {
+                this.rootEl = document.querySelector(appSelector);
+                this.navContainer = document.querySelector(navSelector);
+                this.contentContainer = document.querySelector(contentSelector);
+                this.data = data;
+                this.activeDayIndex = 0;
+            }
+
+            init() {
+                this.renderNav();
+                this.renderContent();
+                this.updateView();
+            }
+
+            renderNav() {
+                this.data.forEach((day, index) => {
+                    const tab = document.createElement('button');
+                    tab.textContent = `Day ${day.day}`;
+                    tab.className = 'px-4 py-2 text-sm font-medium text-gray-600 rounded-full transition-all duration-300 focus:outline-none flex-shrink-0';
+                    tab.dataset.index = index;
+                    
+                    tab.addEventListener('click', (e) => {
+                        this.activeDayIndex = parseInt(e.target.dataset.index);
+                        this.updateView();
+                    });
+                    
+                    this.navContainer.appendChild(tab);
+                });
+            }
+            
+            renderContent() {
+                this.contentContainer.innerHTML = ''; // 이전 컨텐츠 초기화
+                this.data.forEach((dayData, index) => {
+                    const article = document.createElement('article');
+                    article.id = `day-${dayData.day}`;
+                    article.className = 'hidden'; // 처음에는 숨김
+                    
+                    let scheduleHtml = dayData.schedule.map(item => `
+                        <div class="flex items-start space-x-3 mb-4">
+                            <span class="material-symbols-outlined text-sky-500 mt-1">${item.icon}</span>
+                            <div>
+                                <p class="font-bold text-gray-800">${item.time}</p>
+                                <p class="text-gray-600">${item.description}</p>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    let recommendationHtml = dayData.recommendations.length > 0 ? dayData.recommendations.map(item => `
+                         <div class="flex items-start space-x-3 mb-3">
+                            <span class="material-symbols-outlined text-amber-500 text-base mt-1">${item.icon}</span>
+                            <div>
+                                <p class="font-semibold text-gray-700">${item.title}</p>
+                                <p class="text-sm text-gray-500">${item.description}</p>
+                            </div>
+                        </div>
+                    `).join('') : '<p class="text-sm text-gray-500">오늘은 특별한 추천 없이 여유를 즐겨보세요.</p>';
+
+                    article.innerHTML = `
+                        <div class="bg-white rounded-xl shadow-lg p-5 content-card">
+                            <h2 class="text-xl font-bold mb-1 text-gray-800">DAY ${dayData.day} <span class="text-base font-normal text-gray-500">| ${dayData.date}</span></h2>
+                            <p class="text-md text-sky-600 font-semibold mb-6">${dayData.title}</p>
+                            
+                            <div class="mb-8">
+                                <h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2 flex items-center"><span class="material-symbols-outlined mr-2">calendar_month</span>일정</h3>
+                                ${scheduleHtml}
+                            </div>
+                            
+                            <div>
+                                <h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2 flex items-center"><span class="material-symbols-outlined mr-2">recommend</span>맛집 & 꿀팁</h3>
+                                ${recommendationHtml}
+                            </div>
+                        </div>
+                    `;
+                    this.contentContainer.appendChild(article);
+                });
+            }
+
+            updateView() {
+                // 네비게이션 탭 업데이트
+                this.navContainer.querySelectorAll('button').forEach((btn, index) => {
+                    btn.classList.toggle('tab-active', index === this.activeDayIndex);
+                });
+
+                // 컨텐츠 업데이트
+                this.contentContainer.querySelectorAll('article').forEach((article, index) => {
+                    article.classList.toggle('hidden', index !== this.activeDayIndex);
+                });
+
+                // 더 나은 UX를 위해 컨텐츠 상단으로 스크롤
+                this.rootEl.parentElement.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        // --- 데이터 ---
+        const itineraryData = [
+            {
+                day: 1, date: "2025.07.07 (월)", title: "도착 그리고 와이키키의 첫인상",
+                schedule: [
+                    { time: "11:50", description: "호놀룰루 공항(HNL) 도착 후 가이드 미팅 및 와이키키 이동", icon: "flight_land" },
+                    { time: "14:30", description: "쉐라톤 와이키키 호텔 체크인 및 휴식", icon: "hotel" },
+                    { time: "16:00", description: "와이키키 해변 산책하며 하와이 적응하기", icon: "beach_access" },
+                    { time: "18:30", description: "자유로운 저녁 식사 (시차 적응을 위해 가볍게 추천)", icon: "restaurant" }
+                ],
+                recommendations: [
+                    { title: "마루카메 우동", description: "가성비 최고의 우동 맛집. 늘 줄이 길지만 회전율이 빨라요.", icon: "ramen_dining" },
+                    { title: "로얄 하와이안 센터 푸드코트", description: "다양한 음식을 한 곳에서 빠르고 간편하게 즐길 수 있어요.", icon: "local_mall" }
+                ]
+            },
+            {
+                day: 2, date: "2025.07.08 (화)", title: "바닷속 탐험과 로맨틱 인피니티 풀",
+                schedule: [
+                    { time: "오전", description: "하나우마 베이 스노클링 (온라인 사전 예약 필수!)", icon: "scuba_diving" },
+                    { time: "13:30", description: "와이키키 복귀 후 점심 식사", icon: "lunch_dining" },
+                    { time: "15:00", description: "쉐라톤의 명물 '엣지 인피니티 풀'에서 휴양", icon: "pool" },
+                    { time: "19:00", description: "호텔 근처에서 로맨틱한 저녁 식사", icon: "nightlife" }
+                ],
+                recommendations: [
+                    { title: "하나우마 베이 예약", description: "방문 이틀 전 오전 7시(현지 시각)에 공식 사이트에서 예약 필수!", icon: "event_available" },
+                    { title: "치즈케이크 팩토리", description: "다양한 메뉴와 맛있는 치즈케이크. 양이 많으니 참고하세요.", icon: "cake" }
+                ]
+            },
+            {
+                day: 3, date: "2025.07.09 (수)", title: "하늘을 날다! 자유로운 노스쇼어 완전 정복",
+                schedule: [
+                    { time: "08:00", description: "노스쇼어로 이동 (렌터카 추천)", icon: "directions_car" },
+                    { time: "10:00", description: "스카이다이빙 체험 (사전 예약 필수)", icon: "paragliding" },
+                    { time: "14:00", description: "노스쇼어 명물 새우 트럭에서 점심", icon: "local_shipping" },
+                    { time: "15:30", description: "라니아케아 비치에서 쉬고 있는 바다거북 보기", icon: "surfing" },
+                    { time: "16:30", description: "할레이바 타운 구경 및 디저트 타임", icon: "shopping_bag" }
+                ],
+                recommendations: [
+                    { title: "지오반니 새우 트럭", description: "가장 유명한 원조 스캄피 새우. 현금 준비하면 편리해요.", icon: "restaurant_menu" },
+                    { title: "마츠모토 쉐이브 아이스", description: "할레이바의 명물 무지개 빙수. 더위를 식혀보세요.", icon: "icecream" }
+                ]
+            },
+            {
+                day: 4, date: "2025.07.10 (목)", title: "여유로운 휴식, 그리고 최고의 스테이크",
+                schedule: [
+                    { time: "오전", description: "늦잠, 호텔 수영장, 비치 등 완전한 자유시간", icon: "self_improvement" },
+                    { time: "오후", description: "와이키키 시내 쇼핑 및 산책", icon: "styler" },
+                    { time: "19:00", description: "루스 크리스 스테이크 하우스에서 최고의 저녁 식사", icon: "dinner_dining" }
+                ],
+                recommendations: [
+                    { title: "루스 크리스 스테이크 예약", description: "최고급 스테이크. 해피아워(17-18시)를 노리면 가성비가 좋아요. 사전 예약 강력 추천!", icon: "event_available" },
+                    { title: "와이켈레 프리미엄 아울렛", description: "쇼핑을 좋아한다면 렌터카로 방문 추천. 큰 폭의 할인을 받을 수 있어요.", icon: "shopping_cart" }
+                ]
+            },
+            {
+                day: 5, date: "2025.07.11 (금)", title: "환상의 동부 해안 드라이브",
+                schedule: [
+                    { time: "오전", description: "동부 해안선 따라 드라이브 (렌터카 추천)", icon: "map" },
+                    { time: "정오", description: "마카푸우 포인트 전망대에서 멋진 인생샷 남기기", icon: "photo_camera" },
+                    { time: "오후", description: "카일루아 비치 또는 라니카이 비치에서 휴식", icon: "beach_access" },
+                    { time: "저녁", description: "쉐라톤 와이키키에서의 마지막 밤 즐기기", icon: "wine_bar" }
+                ],
+                recommendations: [
+                    { title: "하우스 위드아웃 어 키", description: "할레쿨라니 호텔의 레스토랑. 라이브 음악과 훌라 공연이 로맨틱해요.", icon: "music_note" },
+                    { title: "레오나즈 베이커리", description: "말라사다(도넛) 맛집. 드라이브 출발 전 들러 간식으로 챙기세요.", icon: "bakery_dining"}
+                ]
+            },
+            {
+                day: 6, date: "2025.07.12 (토)", title: "새로운 숙소, 새로운 설렘",
+                schedule: [
+                    { time: "10:30", description: "쉐라톤 체크아웃 후 짐 보관", icon: "luggage" },
+                    { time: "11:00", description: "알라모아나 쇼핑센터에서 쇼핑 및 점심 식사", icon: "local_mall" },
+                    { time: "15:30", description: "아웃리거 와이키키 비치 리조트 체크인", icon: "hotel" },
+                    { time: "저녁", description: "호텔 1층 '듀크스 와이키키'에서 활기찬 저녁", icon: "celebration" }
+                ],
+                recommendations: [
+                    { title: "듀크스 와이키키", description: "해변 바로 앞의 활기찬 분위기. 예약 없이는 대기가 길 수 있어요.", icon: "restaurant" },
+                    { title: "아일랜드 빈티지 커피", description: "아사이볼 맛집. 쇼핑 중 간식으로 추천해요.", icon: "local_cafe"}
+                ]
+            },
+            {
+                day: 7, date: "2025.07.13 (일)", title: "와이키키의 마지막 하루, 온전히 즐기기",
+                schedule: [
+                    { time: "09:00", description: "아웃리거에서 여유롭게 조식 즐기기", icon: "breakfast_dining" },
+                    { time: "10:30", description: "와이키키 해변에서 마지막 해수욕 또는 서핑 레슨", icon: "surfing" },
+                    { time: "15:00", description: "칼라카우아 애비뉴에서 기념품 쇼핑하기", icon: "redeem" },
+                    { time: "18:00", description: "가장 로맨틱한 마지막 저녁 식사", icon: "nightlife" }
+                ],
+                recommendations: [
+                    { title: "훌라 그릴", description: "듀크스 위층에 위치. 좀 더 차분하고 로맨틱한 분위기.", icon: "restaurant" },
+                    { title: "미셸스 앳 더 콜로니 서프", description: "최고의 오션프론트 파인 다이닝. 특별한 마지막 밤을 위해 추천.", icon: "dinner_dining" }
+                ]
+            },
+            {
+                day: 8, date: "2025.07.14 (월)", title: "아쉬운 작별, 소중한 추억을 안고",
+                schedule: [
+                    { time: "09:00", description: "마지막 조식 후 짐 정리하기", icon: "local_cafe" },
+                    { time: "10:30", description: "체크아웃 후 마지막으로 와이키키 둘러보기", icon: "shopping_bag" },
+                    { time: "11:20", description: "예약된 차량으로 공항 이동", icon: "airport_shuttle" },
+                    { time: "14:20", description: "호놀룰루 공항에서 한국으로 출발", icon: "flight_takeoff" }
+                ],
+                recommendations: []
+            },
+        ];
+
+        // --- 앱 초기화 ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const app = new ItineraryApp(
+                '#app', 
+                '#nav-tabs', 
+                '#main-content', 
+                itineraryData
+            );
+            app.init();
+        });
+    </script>
+</body>
+</html>
