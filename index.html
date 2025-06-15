@@ -3,537 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>하와이 오아후 신혼여행 플래너</title>
+    <title>O'ahu Honeymoon Planner</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Warm Aloha (Background: #FFFBF5, Primary Text: #4A4A4A, Accent: #FF6B6B, Secondary: #4ECDC4) -->
-    <!-- Application Structure Plan: The SPA is designed with a top-level tabbed navigation (환영, 상세 일정, 핵심 활동, 여행 정보) to transform the linear report into a non-linear, user-driven experience. This thematic structure allows users to access information based on their immediate needs—be it checking a specific day's schedule, comparing mandatory activities, or looking up logistical details. The "상세 일정" section uses a secondary day-by-day tab system to break down the dense itinerary into digestible pieces. This architecture prioritizes usability and quick information retrieval over simply mimicking the report's chapter order, making trip planning more intuitive and less overwhelming. -->
-    <!-- Visualization & Content Choices: 
-        - Report Info: Full 9-day Itinerary -> Goal: Organize & Simplify -> Viz/Presentation: Interactive daily timeline with icons (HTML/CSS) -> Interaction: Day selection tabs to dynamically show/hide daily schedules -> Justification: Breaks down the long schedule into manageable daily views, improving readability and focus.
-        - Report Info: Comparison of Snorkeling/Skydiving options -> Goal: Compare & Decide -> Viz/Presentation: Interactive toggle cards (HTML/CSS/JS) -> Interaction: Users click buttons to switch between detailed views of each option (e.g., Ko Olina vs. Hanauma Bay) -> Justification: Provides a direct, side-by-side comparison feel without cluttering the UI, aiding decision-making.
-        - Report Info: Various costs (taxi, activities) -> Goal: Inform on Budget -> Viz/Presentation: Bar Chart (Chart.js/Canvas) -> Interaction: Hover tooltips show specific costs -> Justification: Visually aggregates key expenses mentioned in the report, offering a quick budget overview.
-        - Report Info: Logistical details (hotels, transport, tips) -> Goal: Inform & Organize -> Viz/Presentation: Accordion component (HTML/CSS/JS) -> Interaction: Users click to expand/collapse sections -> Justification: Organizes a wide range of practical information into a compact, clean interface.
-    -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
-        body {
-            font-family: 'Noto Sans KR', sans-serif;
-            background-color: #FFFBF5;
-            color: #4A4A4A;
-        }
-        .nav-active {
-            color: #FF6B6B;
-            border-bottom-color: #FF6B6B;
-        }
-        .day-tab-active {
-            background-color: #4ECDC4;
-            color: white;
-        }
-        .accordion-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-in-out;
-        }
-        .activity-card, .info-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .activity-card:hover, .info-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-        }
-        .timeline-item::before {
-            content: '';
-            position: absolute;
-            left: 1rem;
-            top: 1.25rem;
-            bottom: 0;
-            width: 2px;
-            background-color: #4ECDC4;
-            transform: translateX(-50%);
-        }
-        .timeline-item:last-child::before {
-            display: none;
-        }
-        .timeline-icon {
-            position: absolute;
-            left: 1rem;
-            top: 1rem;
-            transform: translateX(-50%);
-            z-index: 10;
-        }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 350px;
-            max-height: 50vh;
-        }
-        @media (min-width: 768px) {
-            .chart-container {
-                height: 450px;
-            }
-        }
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .tab-active { background-color: #0ea5e9; color: white; font-weight: 700; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+        .content-card { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #nav-container::-webkit-scrollbar { display: none; }
+        #nav-container { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="antialiased">
+<body class="min-h-screen">
 
-    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
-
-        <header class="text-center mb-8">
-            <h1 class="text-4xl md:text-5xl font-bold text-[#FF6B6B]">하와이 신혼여행</h1>
-            <p class="text-lg md:text-xl mt-2 text-gray-600">완팁 신혼여행 플래너</p>
+    <div id="app" class="max-w-lg mx-auto bg-white shadow-xl min-h-screen">
+        <!-- Header -->
+        <header class="sticky top-0 bg-white/80 backdrop-blur-lg z-20 shadow-sm">
+            <div class="p-4 text-center border-b">
+                <h1 class="text-2xl font-bold text-sky-600">🌴 O'ahu Honeymoon Planner</h1>
+                <p class="text-sm text-gray-500">2025.07.07 ~ 2025.07.14</p>
+            </div>
+            <nav id="nav-container" class="px-2 py-3 overflow-x-auto whitespace-nowrap">
+                <div id="nav-tabs" class="flex space-x-2">
+                    <!-- JS로 탭 버튼 렌더링 -->
+                </div>
+            </nav>
         </header>
 
-        <nav id="main-nav" class="flex justify-center border-b-2 border-gray-200 mb-8 sticky top-0 bg-[#FFFBF5] z-20 py-2">
-            <button data-target="welcome" class="nav-link nav-active text-lg font-semibold px-4 py-2 border-b-2 border-transparent hover:text-[#FF6B6B]">환영</button>
-            <button data-target="itinerary" class="nav-link text-lg font-semibold px-4 py-2 border-b-2 border-transparent hover:text-[#FF6B6B]">상세 일정</button>
-            <button data-target="activities" class="nav-link text-lg font-semibold px-4 py-2 border-b-2 border-transparent hover:text-[#FF6B6B]">핵심 활동</button>
-            <button data-target="info" class="nav-link text-lg font-semibold px-4 py-2 border-b-2 border-transparent hover:text-[#FF6B6B]">여행 정보</button>
-        </nav>
-
-        <main>
-            <section id="welcome" class="page-content">
-                <div class="bg-white p-8 rounded-xl shadow-lg">
-                    <h2 class="text-3xl font-bold text-[#4ECDC4] mb-4">알로하! 오아후에 오신 것을 환영합니다.</h2>
-                    <p class="text-lg mb-6">이 플래너는 2025년 7월, 하와이 오아후 섬에서 잊지 못할 7박 9일의 신혼여행을 계획하는 두 분을 위해 제작되었습니다. '휴양'이라는 핵심 테마에 맞춰, 필수 활동과 충분한 휴식이 조화롭게 어우러진 여유로운 일정을 제안합니다. 각 섹션을 자유롭게 탐색하며 두 분만의 특별한 여행을 완성해 보세요.</p>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                        <div class="info-card bg-rose-50 p-6 rounded-lg">
-                            <span class="text-4xl">🗓️</span>
-                            <h3 class="text-xl font-bold mt-2">여행 기간</h3>
-                            <p class="text-gray-600 mt-1">2025.07.07 - 2025.07.14</p>
-                        </div>
-                        <div class="info-card bg-cyan-50 p-6 rounded-lg">
-                            <span class="text-4xl">🏝️</span>
-                            <h3 class="text-xl font-bold mt-2">여행 테마</h3>
-                            <p class="text-gray-600 mt-1">여유 & 로맨틱 휴양</p>
-                        </div>
-                        <div class="info-card bg-amber-50 p-6 rounded-lg">
-                            <span class="text-4xl">🔑</span>
-                            <h3 class="text-xl font-bold mt-2">필수 활동</h3>
-                            <p class="text-gray-600 mt-1">스카이다이빙, 스노클링, 스테이크</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section id="itinerary" class="page-content hidden">
-                 <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
-                    <h2 class="text-3xl font-bold text-[#4ECDC4] mb-4 text-center">매일의 여정</h2>
-                    <p class="text-center text-lg mb-6">아래 탭을 클릭하여 각 날짜의 상세 일정을 확인해 보세요. 액티비티와 휴식이 균형을 이룬 하루하루가 두 분을 기다립니다.</p>
-                    <div id="day-tabs" class="flex flex-wrap justify-center gap-2 mb-6">
-                    </div>
-                    <div id="itinerary-content">
-                    </div>
-                </div>
-            </section>
-
-            <section id="activities" class="page-content hidden">
-                <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
-                    <h2 class="text-3xl font-bold text-[#4ECDC4] mb-4 text-center">놓칠 수 없는 핵심 활동</h2>
-                    <p class="text-center text-lg mb-8">이번 여행의 하이라이트가 될 세 가지 필수 활동을 자세히 알아보세요. 각 활동의 특징을 비교하고 두 분의 스타일에 맞는 최상의 선택을 할 수 있도록 정보를 제공합니다.</p>
-                    <div class="space-y-8">
-                        
-                        <div class="activity-card bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-                            <h3 class="text-2xl font-bold mb-3 flex items-center"><span class="text-3xl mr-3">🪂</span>스카이다이빙: 하늘을 나는 경험</h3>
-                            <p class="mb-4">오아후의 아름다운 노스쇼어 해안선을 배경으로 평생 잊지 못할 짜릿한 순간을 경험하세요. 어떤 곳이 우리에게 더 맞을지 아래 버튼을 눌러 비교해 보세요.</p>
-                            <div class="flex space-x-2 mb-4">
-                                <button onclick="showActivityDetail('skydiving', 'pacific')" class="activity-toggle-btn skydiving flex-1 bg-gray-200 p-2 rounded-lg font-semibold">퍼시픽 스카이다이빙</button>
-                                <button onclick="showActivityDetail('skydiving', 'hawaii')" class="activity-toggle-btn skydiving flex-1 bg-gray-200 p-2 rounded-lg font-semibold">스카이다이브 하와이</button>
-                            </div>
-                            <div id="skydiving-pacific-detail" class="activity-detail skydiving hidden p-4 bg-cyan-50 rounded-lg">
-                                <h4 class="font-bold text-lg text-cyan-800">퍼시픽 스카이다이빙 호놀룰루</h4>
-                                <ul class="list-disc list-inside mt-2 space-y-1 text-gray-700">
-                                    <li><strong>특징:</strong> 오전 이른 픽업(4:40-5:20)으로 오후 휴식 시간 확보 가능.</li>
-                                    <li><strong>셔틀:</strong> 와이키키 무료 셔틀 제공.</li>
-                                    <li><strong>소요시간:</strong> 약 6시간 (이동 및 대기 포함).</li>
-                                    <li><strong>장점:</strong> 효율적인 시간 관리로 '휴양' 목적에 부합.</li>
-                                    <li><strong>준비물:</strong> 신분증, 발가락 가려지는 신발 필수.</li>
-                                </ul>
-                            </div>
-                            <div id="skydiving-hawaii-detail" class="activity-detail skydiving hidden p-4 bg-cyan-50 rounded-lg">
-                                <h4 class="font-bold text-lg text-cyan-800">스카이다이브 하와이</h4>
-                                <ul class="list-disc list-inside mt-2 space-y-1 text-gray-700">
-                                    <li><strong>특징:</strong> 하와이에서 가장 오래된 업체로 우수한 안전 기록 보유.</li>
-                                    <li><strong>점프 높이:</strong> 14,000피트, 20,000피트(HALO) 등 다양한 옵션 제공.</li>
-                                    <li><strong>셔틀:</strong> 와이키키 셔틀 서비스 이용 가능.</li>
-                                    <li><strong>장점:</strong> 높은 신뢰도와 다양한 점프 옵션 선택 가능.</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div class="activity-card bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-                            <h3 class="text-2xl font-bold mb-3 flex items-center"><span class="text-3xl mr-3">🐠</span>스노클링: 바닷속 파라다이스</h3>
-                            <p class="mb-4">에메랄드빛 바다에서 형형색색의 열대어와 바다거북을 만나보세요. 편안한 휴양을 원한다면 코올리나 라군, 다채로운 해양 생태계를 원한다면 하나우마 베이를 추천합니다.</p>
-                             <div class="flex space-x-2 mb-4">
-                                <button onclick="showActivityDetail('snorkeling', 'koolina')" class="activity-toggle-btn snorkeling flex-1 bg-gray-200 p-2 rounded-lg font-semibold">코올리나 라군</button>
-                                <button onclick="showActivityDetail('snorkeling', 'hanauma')" class="activity-toggle-btn snorkeling flex-1 bg-gray-200 p-2 rounded-lg font-semibold">하나우마 베이</button>
-                            </div>
-                            <div id="snorkeling-koolina-detail" class="activity-detail snorkeling hidden p-4 bg-cyan-50 rounded-lg">
-                                <h4 class="font-bold text-lg text-cyan-800">코올리나 라군 (휴양 추천)</h4>
-                                <ul class="list-disc list-inside mt-2 space-y-1 text-gray-700">
-                                    <li><strong>특징:</strong> 인공으로 조성된 잔잔한 해변, 파도가 거의 없어 안전.</li>
-                                    <li><strong>장점:</strong> 예약 불필요, 무료 주차, 한적하고 평화로운 분위기.</li>
-                                    <li><strong>단점:</strong> 자연 그대로의 산호초 군락은 아님.</li>
-                                    <li><strong>적합 대상:</strong> 수영 초보자, 복잡한 절차 없이 편안한 스노클링을 원하는 커플.</li>
-                                </ul>
-                            </div>
-                            <div id="snorkeling-hanauma-detail" class="activity-detail snorkeling hidden p-4 bg-cyan-50 rounded-lg">
-                                <h4 class="font-bold text-lg text-cyan-800">하나우마 베이 (자연 탐험)</h4>
-                                <ul class="list-disc list-inside mt-2 space-y-1 text-gray-700">
-                                    <li><strong>특징:</strong> 자연 보호 구역, 풍부한 산호초와 다양한 열대어.</li>
-                                    <li><strong>주의사항:</strong> 48시간 전 온라인 예약 필수(빠르게 매진), 월/화 휴무, 입장 전 9분 교육 영상 시청 의무.</li>
-                                    <li><strong>비용:</strong> 입장료 $25/인, 주차비 $3(현금).</li>
-                                    <li><strong>적합 대상:</strong> 아름다운 자연 경관과 해양 생물 다양성을 중요하게 생각하는 커플.</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div class="activity-card bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-                            <h3 class="text-2xl font-bold mb-3 flex items-center"><span class="text-3xl mr-3">🥩</span>루스 크리스 스테이크 하우스: 로맨틱 디너</h3>
-                            <p class="mb-4">최고급 스테이크와 함께 신혼여행의 특별한 밤을 완성하세요. 와이키키 비치 워크에 위치해 접근성이 좋으며, 로맨틱한 분위기에서 완벽한 저녁 식사를 즐길 수 있습니다. 인기가 많으므로 사전 예약은 필수입니다.</p>
-                            <div class="p-4 bg-rose-50 rounded-lg">
-                                <ul class="space-y-2 text-gray-700">
-                                    <li><strong>📍 위치:</strong> 와이키키 비치 워크 지점</li>
-                                    <li><strong>⏰ 운영 시간:</strong> 매일 오후 5시 - 10시</li>
-                                    <li><strong>💡 팁:</strong> 최소 일주일 전 '오픈테이블' 앱이나 공식 웹사이트를 통해 예약하세요.</li>
-                                </ul>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </section>
-
-            <section id="info" class="page-content hidden">
-                <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
-                    <h2 class="text-3xl font-bold text-[#4ECDC4] mb-4 text-center">유용한 여행 정보</h2>
-                    <p class="text-center text-lg mb-8">성공적인 여행을 위한 필수 정보들을 모았습니다. 숙소, 교통, 추천 맛집부터 예산 계획까지, 아래 항목들을 클릭하여 확인해 보세요.</p>
-                    <div id="accordion-container" class="space-y-4">
-                        
-                        <div class="accordion-item bg-white border border-gray-200 rounded-lg">
-                            <button class="accordion-header w-full text-left p-4 font-bold text-lg flex justify-between items-center hover:bg-gray-50">
-                                <span>🏨 숙소 정보</span>
-                                <span class="transform transition-transform duration-300">▼</span>
-                            </button>
-                            <div class="accordion-content px-4 pb-4">
-                                <p class="mt-2">이번 여행에서는 두 곳의 호텔에 머물게 됩니다. 호텔 변경일의 동선을 미리 계획하여 편안한 이동이 되도록 하세요.</p>
-                                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div class="p-4 bg-cyan-50 rounded-lg">
-                                        <h4 class="font-bold">쉐라톤 와이키키 (7/7 - 7/12, 5박)</h4>
-                                        <ul class="list-disc list-inside mt-2">
-                                            <li>체크인: 15:00 / 체크아웃: 11:00</li>
-                                            <li>조식 불포함</li>
-                                            <li>편의시설: 벨 데스크(짐 보관), 24시 세탁실, 층별 전자레인지</li>
-                                        </ul>
-                                    </div>
-                                    <div class="p-4 bg-rose-50 rounded-lg">
-                                        <h4 class="font-bold">아웃리거 와이키키 파라다이스 (7/12 - 7/14, 2박)</h4>
-                                        <ul class="list-disc list-inside mt-2">
-                                            <li>체크인: 15:00 / 체크아웃: 11:00</li>
-                                            <li>조식 포함</li>
-                                            <li>팁: 쉐라톤 체크아웃 후 짐을 미리 맡기고 점심 식사를 즐기세요.</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="accordion-item bg-white border border-gray-200 rounded-lg">
-                             <button class="accordion-header w-full text-left p-4 font-bold text-lg flex justify-between items-center hover:bg-gray-50">
-                                <span>🚗 교통편 가이드</span>
-                                <span class="transform transition-transform duration-300">▼</span>
-                            </button>
-                            <div class="accordion-content px-4 pb-4">
-                               <p class="mt-2">'휴양' 목적에 맞춰 렌터카, 우버, 대중교통을 적절히 혼합하여 이용하는 것을 추천합니다.</p>
-                               <ul class="mt-4 space-y-2 list-disc list-inside">
-                                   <li><strong>렌터카:</strong> 동부 해안 드라이브 등 특정 목적이 있을 때 하루만 대여하는 것을 추천. 와이키키 주차비는 비싸고(최대 $45/일) 교통체증이 있습니다.</li>
-                                   <li><strong>우버/리프트:</strong> 와이키키 내 또는 근거리 이동 시 가장 편리하고 스트레스 없는 방법입니다.</li>
-                                   <li><strong>더 버스:</strong> 경제적이지만(편도 $2.50) 노선 숙지가 필요하며 장거리 이동 시 불편할 수 있습니다.</li>
-                                   <li><strong>셔틀 서비스:</strong> 공항 왕복 및 스카이다이빙 등 액티비티는 포함된 셔틀을 최대한 활용하세요.</li>
-                               </ul>
-                            </div>
-                        </div>
-
-                         <div class="accordion-item bg-white border border-gray-200 rounded-lg">
-                             <button class="accordion-header w-full text-left p-4 font-bold text-lg flex justify-between items-center hover:bg-gray-50">
-                                <span>💸 주요 경비 미리보기</span>
-                                <span class="transform transition-transform duration-300">▼</span>
-                            </button>
-                            <div class="accordion-content px-4 py-4">
-                               <p class="mt-2 mb-4">여행 중 발생할 수 있는 주요 선택적 경비를 시각적으로 비교해 보세요. 이는 대략적인 참고용이며, 실제 비용은 선택 옵션이나 시기에 따라 달라질 수 있습니다.</p>
-                               <div class="chart-container">
-                                   <canvas id="costChart"></canvas>
-                               </div>
-                            </div>
-                        </div>
-                        
-                        <div class="accordion-item bg-white border border-gray-200 rounded-lg">
-                             <button class="accordion-header w-full text-left p-4 font-bold text-lg flex justify-between items-center hover:bg-gray-50">
-                                <span>🍽️ 추천 다이닝 (루스 크리스 외)</span>
-                                <span class="transform transition-transform duration-300">▼</span>
-                            </button>
-                            <div class="accordion-content px-4 pb-4">
-                               <ul class="mt-4 space-y-3">
-                                   <li><strong>로맨틱 디너:</strong>
-                                       <ul class="list-disc list-inside ml-4 text-gray-600">
-                                           <li><strong>탑 오브 와이키키:</strong> 360도 회전하며 와이키키 전경을 감상하는 레스토랑</li>
-                                           <li><strong>100 세일즈 레스토랑 & 바:</strong> 항구와 석양 전망의 해산물 뷔페</li>
-                                       </ul>
-                                   </li>
-                                   <li><strong>조식 대안 (쉐라톤 숙박 시):</strong>
-                                        <ul class="list-disc list-inside ml-4 text-gray-600">
-                                           <li><strong>카이 마켓 (쉐라톤 내):</strong> 오션뷰 조식 뷔페</li>
-                                           <li><strong>서프 라나이 (로얄 하와이안):</strong> '핑크 궁전'에서의 낭만적인 아침</li>
-                                       </ul>
-                                   </li>
-                                   <li><strong>캐주얼 다이닝:</strong>
-                                        <ul class="list-disc list-inside ml-4 text-gray-600">
-                                           <li><strong>마루카메 우동:</strong> 가성비 좋은 일본식 우동 맛집 (줄이 길 수 있음)</li>
-                                           <li><strong>인터내셔널 마켓 플레이스:</strong> 다양한 푸드코트와 레스토랑 입점</li>
-                                       </ul>
-                                   </li>
-                               </ul>
-                            </div>
-                        </div>
-
-                        <div class="accordion-item bg-white border border-gray-200 rounded-lg">
-                             <button class="accordion-header w-full text-left p-4 font-bold text-lg flex justify-between items-center hover:bg-gray-50">
-                                <span>✅ 예약 및 준비물 팁</span>
-                                <span class="transform transition-transform duration-300">▼</span>
-                            </button>
-                            <div class="accordion-content px-4 pb-4">
-                                <ul class="mt-4 space-y-2 list-disc list-inside">
-                                    <li><strong>사전 예약 필수:</strong> 스카이다이빙, 루스 크리스, 스파, 선셋 크루즈, 하나우마 베이는 원하는 날짜에 즐기기 위해 미리 예약하세요.</li>
-                                    <li><strong>리프 세이프 선크림:</strong> 하와이의 산호초 보호를 위해 필수입니다.</li>
-                                    <li><strong>발가락 가려지는 신발:</strong> 스카이다이빙 시 필요합니다.</li>
-                                    <li><strong>가벼운 겉옷:</strong> 실내나 버스의 강한 에어컨에 대비하세요.</li>
-                                    <li><strong>현금:</strong> 일부 주차장(하나우마 베이)이나 팁 등 소액 결제에 유용합니다.</li>
-                                    <li><strong>알로하 정신:</strong> 현지 문화를 존중하는 마음으로, 여유롭게 양보하고 미소 짓는 여행이 되세요.</li>
-                               </ul>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </section>
+        <!-- Main Content -->
+        <main id="main-content" class="p-4">
+            <!-- JS로 컨텐츠 렌더링 -->
         </main>
-
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            
-            const mainNav = document.getElementById('main-nav');
-            const navLinks = mainNav.querySelectorAll('.nav-link');
-            const pages = document.querySelectorAll('.page-content');
-
-            mainNav.addEventListener('click', (e) => {
-                const targetId = e.target.dataset.target;
-                if (!targetId) return;
-
-                pages.forEach(page => {
-                    page.classList.add('hidden');
-                });
-                document.getElementById(targetId).classList.remove('hidden');
-
-                navLinks.forEach(link => {
-                    link.classList.remove('nav-active');
-                });
-                e.target.classList.add('nav-active');
-            });
-
-            const itineraryData = [
-                { day: 1, date: "7/7 (월)", title: "도착 및 와이키키 첫인상", schedule: [
-                    { time: "11:50", event: "✈️ 호놀룰루 공항 도착", desc: "예약된 교통편으로 호텔 이동" },
-                    { time: "12:30", event: "🏨 쉐라톤 와이키키 도착", desc: "체크인 전 짐 맡기고 점심 식사 또는 주변 산책" },
-                    { time: "15:00", event: "🔑 객실 체크인 및 휴식", desc: "긴 비행의 피로 풀기" },
-                    { time: "18:00", event: "🍽️ 와이키키에서 저녁 식사", desc: "오션뷰 레스토랑에서 로맨틱한 첫 식사" },
-                    { time: "19:30", event: "🌙 와이키키 해변 산책", desc: "석양을 감상하며 하루 마무리" }
-                ]},
-                { day: 2, date: "7/8 (화)", title: "짜릿한 스카이다이빙", schedule: [
-                    { time: "05:00", event: "🪂 스카이다이빙 픽업", desc: "이른 아침 노스쇼어로 출발 (업체 셔틀 이용)" },
-                    { time: "08:00", event: "✨ 스카이다이빙 체험", desc: "오아후 상공에서 즐기는 최고의 액티비티" },
-                    { time: "14:00", event: "🏨 와이키키 복귀 및 점심", desc: "오후는 온전히 휴식에 집중" },
-                    { time: "15:00", event: "🏊 호텔 수영장/해변 휴식", desc: "액티비티 후 충분한 재충전 시간 갖기" },
-                    { time: "19:00", event: "🍽️ 편안한 저녁 식사", desc: "와이키키에서 즐기는 캐주얼 다이닝" }
-                ]},
-                { day: 3, date: "7/9 (수)", title: "신비로운 바닷속 탐험", schedule: [
-                    { time: "09:00", event: "🐠 스노클링 (코올리나 추천)", desc: "우버/렌터카로 이동. 잔잔한 라군에서 편안하게 즐기기" },
-                    { time: "13:00", event: "🍽️ 점심 식사 및 와이키키 복귀", desc: "스노클링 후 여유로운 점심" },
-                    { time: "15:00", event: "🛍️ 자유시간", desc: "호텔 휴식 또는 가벼운 쇼핑" },
-                    { time: "19:00", event: "🍽️ 캐주얼 저녁 식사", desc: "와이키키의 다양한 맛집 탐방" }
-                ]},
-                 { day: 4, date: "7/10 (목)", title: "완벽한 휴식과 미식", schedule: [
-                    { time: "오전", event: "☀️ 와이키키에서 자유시간", desc: "해변에서 태닝, 수영 등 온전한 휴식" },
-                    { time: "13:00", event: "🍽️ 점심 식사", desc: "와이키키에서 즐기는 가벼운 점심" },
-                    { time: "15:00", event: "💆‍♀️ 커플 스파 트리트먼트 (선택)", desc: "아바사 스파 등에서 피로를 푸는 시간" },
-                    { time: "18:00", event: "🥩 루스 크리스 스테이크 하우스", desc: "사전 예약 필수! 로맨틱 디너" }
-                ]},
-                 { day: 5, date: "7/11 (금)", title: "동부 해안 드라이브", schedule: [
-                    { time: "오전", event: "🚗 동부 해안 드라이브", desc: "렌터카로 할로나 블로우홀, 라나이 전망대 등 감상" },
-                    { time: "13:00", event: "🏖️ 카일루아 비치", desc: "한적하고 아름다운 해변에서 휴식 및 점심" },
-                    { time: "17:30", event: "🚢 선셋 디너 크루즈 (선택)", desc: "금요일 특별 불꽃놀이와 함께하는 디너" },
-                    { time: "20:30", event: "🏨 호텔 복귀 및 휴식", desc: "하루 마무리" }
-                ]},
-                { day: 6, date: "7/12 (토)", title: "새로운 숙소, 새로운 풍경", schedule: [
-                    { time: "오전", event: "🍳 아침 식사 및 짐 정리", desc: "마지막 쉐라톤에서의 아침" },
-                    { time: "11:00", event: "🏨 쉐라톤 와이키키 체크아웃", desc: "짐은 아웃리거에 미리 맡기기" },
-                    { time: "12:00", event: "🍽️ 여유로운 점심", desc: "체크인 시간까지 와이키키에서 시간 보내기" },
-                    { time: "15:00", event: "🏨 아웃리거 와이키키 체크인", desc: "새로운 숙소에서 휴식" },
-                    { time: "19:00", event: "🍽️ 저녁 식사", desc: "활기찬 토요일 밤 와이키키 즐기기" }
-                ]},
-                { day: 7, date: "7/13 (일)", title: "두 사람만을 위한 자유시간", schedule: [
-                    { time: "종일", event: "💖 온전한 자유시간", desc: "포함된 조식 후, 해변, 수영, 쇼핑 등 원하는 대로 하루 보내기" },
-                    { time: "저녁", event: "🥂 마지막 로맨틱 디너", desc: "와이키키 야경을 보며 특별한 저녁 식사" }
-                ]},
-                { day: 8, date: "7/14 (월)", title: "작별 인사, 오아후", schedule: [
-                    { time: "오전", event: "🛍️ 마지막 쇼핑 및 산책", desc: "포함된 조식 후, 기념품 구입하기" },
-                    { time: "11:00", event: "🏨 아웃리거 와이키키 체크아웃", desc: "공항 가기 전까지 짐 보관" },
-                    { time: "12:20", event: "🚗 공항으로 이동", desc: "예약된 교통편 이용" },
-                    { time: "14:20", event: "✈️ 하와이 출발", desc: "소중한 추억을 안고 귀국" }
-                ]},
-            ];
-            
-            const dayTabsContainer = document.getElementById('day-tabs');
-            const itineraryContentContainer = document.getElementById('itinerary-content');
-
-            itineraryData.forEach((item, index) => {
-                const button = document.createElement('button');
-                button.className = 'day-tab px-3 py-2 text-sm md:px-4 md:py-2 md:text-base font-semibold rounded-full bg-gray-100 text-gray-700 hover:bg-[#4ECDC4] hover:text-white transition';
-                button.textContent = `Day ${item.day}`;
-                button.dataset.day = item.day;
-                if (index === 0) {
-                    button.classList.add('day-tab-active');
-                }
-                dayTabsContainer.appendChild(button);
-            });
-
-            function renderItinerary(day) {
-                const data = itineraryData.find(item => item.day == day);
-                let contentHtml = `<h3 class="text-2xl font-bold mb-1">${data.date} - ${data.title}</h3>`;
-                contentHtml += `<div class="relative pl-8 pt-4">`;
-                data.schedule.forEach(item => {
-                    contentHtml += `
-                        <div class="timeline-item relative pb-8">
-                            <div class="timeline-icon bg-[#FF6B6B] w-6 h-6 rounded-full flex items-center justify-center text-white font-bold">${item.time.split(':')[0]}</div>
-                            <div class="pl-6">
-                                <p class="font-bold text-lg">${item.time} - ${item.event}</p>
-                                <p class="text-gray-600">${item.desc}</p>
-                            </div>
-                        </div>
-                    `;
-                });
-                contentHtml += `</div>`;
-                itineraryContentContainer.innerHTML = contentHtml;
+    <script type="text/javascript">
+        class ItineraryApp {
+            constructor(appSelector, navSelector, contentSelector, data) {
+                this.rootEl = document.querySelector(appSelector);
+                this.navContainer = document.querySelector(navSelector);
+                this.contentContainer = document.querySelector(contentSelector);
+                this.data = data;
+                this.activeTabId = data.tabs[0].id;
             }
 
-            dayTabsContainer.addEventListener('click', (e) => {
-                if(e.target.classList.contains('day-tab')){
-                    const day = e.target.dataset.day;
-                    renderItinerary(day);
+            init() {
+                this.renderNav();
+                this.renderContent();
+                this.updateView();
+            }
+
+            renderNav() {
+                this.data.tabs.forEach(tab => {
+                    const button = document.createElement('button');
+                    button.textContent = tab.label;
+                    button.className = 'px-4 py-2 text-sm font-medium text-gray-600 rounded-full transition-all duration-300 focus:outline-none flex-shrink-0';
+                    button.dataset.id = tab.id;
                     
-                    document.querySelectorAll('.day-tab').forEach(tab => tab.classList.remove('day-tab-active'));
-                    e.target.classList.add('day-tab-active');
-                }
-            });
-
-            renderItinerary(1);
-
-
-            const accordionItems = document.querySelectorAll('.accordion-item');
-            accordionItems.forEach(item => {
-                const header = item.querySelector('.accordion-header');
-                const content = item.querySelector('.accordion-content');
-                const icon = header.querySelector('span:last-child');
-                header.addEventListener('click', () => {
-                    const isExpanded = content.style.maxHeight && content.style.maxHeight !== '0px';
+                    button.addEventListener('click', (e) => {
+                        this.activeTabId = e.target.dataset.id;
+                        this.updateView();
+                    });
                     
-                    document.querySelectorAll('.accordion-content').forEach(c => c.style.maxHeight = '0px');
-                    document.querySelectorAll('.accordion-header span:last-child').forEach(i => i.style.transform = '');
-
-                    if (!isExpanded) {
-                        content.style.maxHeight = content.scrollHeight + 'px';
-                        icon.style.transform = 'rotate(180deg)';
-                    }
+                    this.navContainer.appendChild(button);
                 });
-            });
-
-            const costData = {
-                labels: ['공항 택시 (편도)', '공항 우버 (편도)', '스카이다이빙 (1인)', '하나우마 베이 (1인)'],
-                datasets: [{
-                    label: '예상 비용 (USD)',
-                    data: [50, 35, 245, 28],
-                    backgroundColor: [
-                        'rgba(255, 107, 107, 0.6)',
-                        'rgba(78, 205, 196, 0.6)',
-                        'rgba(255, 159, 64, 0.6)',
-                        'rgba(54, 162, 235, 0.6)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 107, 107, 1)',
-                        'rgba(78, 205, 196, 1)',
-                        'rgba(255, 159, 64, 1)',
-                        'rgba(54, 162, 235, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            };
-
-            const costChartCtx = document.getElementById('costChart').getContext('2d');
-            new Chart(costChartCtx, {
-                type: 'bar',
-                data: costData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        title: {
-                            display: true,
-                            text: '주요 활동 및 교통편 예상 비용'
-                        },
-                        tooltip: {
-                             callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    if (context.parsed.y !== null) {
-                                        label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
-                                    }
-                                    return label;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value, index, values) {
-                                    return '$' + value;
-                                }
-                            }
-                        }
+            }
+            
+            renderContent() {
+                this.contentContainer.innerHTML = '';
+                this.data.tabs.forEach(tabData => {
+                    const article = document.createElement('article');
+                    article.id = tabData.id;
+                    article.className = 'hidden';
+                    
+                    if (tabData.type === 'day') {
+                        article.innerHTML = this.getDayHtml(tabData.data);
+                    } else if (tabData.type === 'section') {
+                        article.innerHTML = this.getSectionHtml(tabData);
                     }
-                }
-            });
-        });
+                    this.contentContainer.appendChild(article);
+                });
+            }
+            
+            getDayHtml(dayData) {
+                let scheduleHtml = dayData.schedule.map(item => `
+                    <div class="flex items-start space-x-3 mb-4">
+                        <span class="material-symbols-outlined text-sky-500 mt-1">${item.icon}</span>
+                        <div><p class="font-bold text-gray-800">${item.time}</p><p class="text-gray-600">${item.description}</p></div>
+                    </div>`).join('');
+                
+                let recommendationHtml = dayData.recommendations.map(item => `
+                     <div class="flex items-start space-x-3 mb-3">
+                        <span class="material-symbols-outlined text-amber-500 text-base mt-1">${item.icon}</span>
+                        <div><p class="font-semibold text-gray-700">${item.title}</p><p class="text-sm text-gray-500">${item.description}</p></div>
+                    </div>`).join('');
 
-        function showActivityDetail(type, detail) {
-            document.querySelectorAll(`.activity-detail.${type}`).forEach(el => el.classList.add('hidden'));
-            document.getElementById(`${type}-${detail}-detail`).classList.remove('hidden');
+                let detailsHtml = dayData.details && dayData.details.length > 0 ? dayData.details.map(item => `
+                    <div class="flex items-start space-x-3 mb-3">
+                        <span class="material-symbols-outlined text-green-500 text-base mt-1">${item.icon}</span>
+                        <div>
+                            <p class="font-semibold text-gray-700">${item.title}</p>
+                            <p class="text-sm text-gray-500">${item.description}</p>
+                        </div>
+                    </div>`).join('') : '';
+                
+                return `
+                    <div class="bg-white rounded-xl shadow-lg p-5 content-card">
+                        <h2 class="text-xl font-bold mb-1 text-gray-800">DAY ${dayData.day} <span class="text-base font-normal text-gray-500">| ${dayData.date}</span></h2>
+                        <p class="text-md text-sky-600 font-semibold mb-6">${dayData.title}</p>
+                        
+                        <div class="mb-8"><h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2 flex items-center"><span class="material-symbols-outlined mr-2">calendar_month</span>일정</h3>${scheduleHtml}</div>
+                        
+                        <div class="mb-8"><h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2 flex items-center"><span class="material-symbols-outlined mr-2">recommend</span>맛집 & 꿀팁</h3>${recommendationHtml || '<p class="text-sm text-gray-500">오늘은 특별한 추천 없이 여유를 즐겨보세요.</p>'}</div>
 
-            document.querySelectorAll(`.activity-toggle-btn.${type}`).forEach(btn => btn.classList.remove('bg-[#4ECDC4]', 'text-white'));
-            document.querySelector(`button[onclick="showActivityDetail('${type}', '${detail}')"]`).classList.add('bg-[#4ECDC4]', 'text-white');
+                        ${detailsHtml ? `<div><h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2 flex items-center"><span class="material-symbols-outlined mr-2">info</span>준비물 & 정보</h3>${detailsHtml}</div>` : ''}
+                    </div>`;
+            }
+
+            getSectionHtml(sectionData) {
+                let contentHtml = sectionData.data.content.map(category => `
+                    <div class="mb-6">
+                        <h4 class="font-bold text-md mb-2 text-gray-700">${category.category}</h4>
+                        <ul class="list-disc list-inside text-gray-600 space-y-1">
+                            ${category.items.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="bg-white rounded-xl shadow-lg p-5 content-card">
+                        <h2 class="text-xl font-bold mb-6 text-gray-800 flex items-center"><span class="material-symbols-outlined mr-2 text-sky-600">${sectionData.data.icon}</span>${sectionData.data.title}</h2>
+                        ${contentHtml}
+                    </div>`;
+            }
+
+            updateView() {
+                this.navContainer.querySelectorAll('button').forEach(btn => {
+                    btn.classList.toggle('tab-active', btn.dataset.id === this.activeTabId);
+                });
+
+                this.contentContainer.querySelectorAll('article').forEach(article => {
+                    article.classList.toggle('hidden', article.id !== this.activeTabId);
+                });
+                
+                this.rootEl.parentElement.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         }
 
+        // --- 데이터 ---
+        const appData = {
+            tabs: [
+                { id: 'day-1', type: 'day', label: 'Day 1', data: { day: 1, date: "2025.07.07 (월)", title: "도착 그리고 와이키키의 첫인상", schedule: [{ time: "11:50", description: "호놀룰루 공항(HNL) 도착 후 가이드 미팅 및 와이키키 이동", icon: "flight_land" }, { time: "14:30", description: "쉐라톤 와이키키 호텔 체크인 및 휴식", icon: "hotel" }, { time: "16:00", description: "와이키키 해변 산책하며 하와이 적응하기", icon: "beach_access" }, { time: "18:30", description: "자유로운 저녁 식사 (시차 적응을 위해 가볍게 추천)", icon: "restaurant" }], recommendations: [{ title: "마루카메 우동", description: "가성비 최고의 우동 맛집. 늘 줄이 길지만 회전율이 빨라요.", icon: "ramen_dining" }, { title: "로얄 하와이안 센터 푸드코트", description: "다양한 음식을 한 곳에서 빠르고 간편하게 즐길 수 있어요.", icon: "local_mall" }], details: [{title: "숙소 정보", description: "쉐라톤 와이키키는 성인 전용 '엣지 인피니티 풀'이 유명합니다. 수영복을 미리 챙겨 이용해보세요.", icon:"hotel"}, {title:"공항 픽업", description:"예약된 투어 차량을 이용해 편하게 이동합니다. 가이드의 안내에 따라주세요.", icon:"airport_shuttle"}] }},
+                { id: 'day-2', type: 'day', label: 'Day 2', data: { day: 2, date: "2025.07.08 (화)", title: "바닷속 탐험과 로맨틱 인피니티 풀", schedule: [{ time: "오전", description: "하나우마 베이 스노클링 (온라인 사전 예약 필수!)", icon: "scuba_diving" }, { time: "13:30", description: "와이키키 복귀 후 점심 식사", icon: "lunch_dining" }, { time: "15:00", description: "쉐라톤의 명물 '엣지 인피니티 풀'에서 휴양", icon: "pool" }, { time: "19:00", description: "호텔 근처에서 로맨틱한 저녁 식사", icon: "nightlife" }], recommendations: [{ title: "하나우마 베이 예약", description: "방문 이틀 전 오전 7시(현지 시각)에 공식 사이트에서 예약 필수!", icon: "event_available" }, { title: "치즈케이크 팩토리", description: "다양한 메뉴와 맛있는 치즈케이크. 양이 많으니 참고하세요.", icon: "cake" }], details: [{title: "스노클링 준비물", description:"산호초 보호(Reef-safe) 선크림, 수영복, 타월, 아쿠아슈즈, 방수팩을 준비하세요. 장비 대여도 가능합니다.", icon:"checklist"},{title:"온라인 예약", description:"하나우마 베이 공식 홈페이지(pros.hnl.info)에서 방문 2일 전 오전 7시에 예약하세요. 경쟁이 치열합니다.", icon:"public"}] }},
+                { id: 'day-3', type: 'day', label: 'Day 3', data: { day: 3, date: "2025.07.09 (수)", title: "하늘을 날다! 자유로운 노스쇼어 완전 정복", schedule: [{ time: "08:00", description: "노스쇼어로 이동 (렌터카 추천)", icon: "directions_car" }, { time: "10:00", description: "스카이다이빙 체험 (사전 예약 필수)", icon: "paragliding" }, { time: "14:00", description: "노스쇼어 명물 새우 트럭에서 점심", icon: "local_shipping" }, { time: "15:30", description: "라니아케아 비치에서 쉬고 있는 바다거북 보기", icon: "surfing" }, { time: "16:30", description: "할레이바 타운 구경 및 디저트 타임", icon: "shopping_bag" }], recommendations: [{ title: "지오반니 새우 트럭", description: "가장 유명한 원조 스캄피 새우. 현금 준비하면 편리해요.", icon: "restaurant_menu" }, { title: "마츠모토 쉐이브 아이스", description: "할레이바의 명물 무지개 빙수. 더위를 식혀보세요.", icon: "icecream" }], details: [{title:"스카이다이빙 업체", description:"'퍼시픽 스카이다이빙', '스카이다이브 하와이' 등이 유명합니다. 온라인으로 미리 예약하세요.", icon:"corporate_fare"}, {title:"복장 안내", description:"편안한 바지와 운동화를 착용하세요. 상공은 추울 수 있으니 얇은 긴팔 옷을 챙기는 것이 좋습니다.", icon:"checkroom"}] }},
+                { id: 'day-4', type: 'day', label: 'Day 4', data: { day: 4, date: "2025.07.10 (목)", title: "여유로운 휴식, 그리고 최고의 스테이크", schedule: [{ time: "오전", description: "늦잠, 호텔 수영장, 비치 등 완전한 자유시간", icon: "self_improvement" }, { time: "오후", description: "와이키키 시내 쇼핑 및 산책", icon: "styler" }, { time: "19:00", description: "루스 크리스 스테이크 하우스에서 최고의 저녁 식사", icon: "dinner_dining" }], recommendations: [{ title: "루스 크리스 스테이크 예약", description: "최고급 스테이크. 해피아워(17-18시)를 노리면 가성비가 좋아요. 사전 예약 강력 추천!", icon: "event_available" }, { title: "와이켈레 프리미엄 아울렛", description: "쇼핑을 좋아한다면 렌터카로 방문 추천. 큰 폭의 할인을 받을 수 있어요.", icon: "shopping_cart" }], details: [{title:"레스토랑 예약", description:"'루스 크리스 스테이크 하우스'는 인기가 많으므로 OpenTable 앱이나 웹사이트로 미리 예약하세요.", icon:"edit_calendar"}, {title:"드레스 코드", description:"고급 레스토랑 방문 시, 남성은 긴바지와 카라가 있는 셔츠, 여성은 원피스 등 스마트 캐주얼 복장을 추천합니다.", icon:"diamond"}] }},
+                { id: 'day-5', type: 'day', label: 'Day 5', data: { day: 5, date: "2025.07.11 (금)", title: "환상의 동부 해안 드라이브", schedule: [{ time: "오전", description: "동부 해안선 따라 드라이브 (렌터카 추천)", icon: "map" }, { time: "정오", description: "마카푸우 포인트 전망대에서 멋진 인생샷 남기기", icon: "photo_camera" }, { time: "오후", description: "카일루아 비치 또는 라니카이 비치에서 휴식", icon: "beach_access" }, { time: "저녁", description: "쉐라톤 와이키키에서의 마지막 밤 즐기기", icon: "wine_bar" }], recommendations: [{ title: "하우스 위드아웃 어 키", description: "할레쿨라니 호텔의 레스토랑. 라이브 음악과 훌라 공연이 로맨틱해요.", icon: "music_note" }, { title: "레오나즈 베이커리", description: "말라사다(도넛) 맛집. 드라이브 출발 전 들러 간식으로 챙기세요.", icon: "bakery_dining"}], details: [{title:"렌터카 필수", description:"동부 해안의 아름다운 스팟들을 자유롭게 둘러보려면 렌터카 이용이 필수적입니다.", icon:"directions_car"}, {title:"추천 스팟", description:"마카푸우 포인트 외에도 할로나 블로우홀, 샌디 비치 등 멋진 해안 절경이 이어집니다.", icon:"add_a_photo_alternate"}] }},
+                { id: 'day-6', type: 'day', label: 'Day 6', data: { day: 6, date: "2025.07.12 (토)", title: "새로운 숙소, 새로운 설렘", schedule: [{ time: "10:30", description: "쉐라톤 체크아웃 후 짐 보관", icon: "luggage" }, { time: "11:00", description: "알라모아나 쇼핑센터에서 쇼핑 및 점심 식사", icon: "local_mall" }, { time: "15:30", description: "아웃리거 와이키키 비치 리조트 체크인", icon: "hotel" }, { time: "저녁", description: "호텔 1층 '듀크스 와이키키'에서 활기찬 저녁", icon: "celebration" }], recommendations: [{ title: "듀크스 와이키키", description: "해변 바로 앞의 활기찬 분위기. 예약 없이는 대기가 길 수 있어요.", icon: "restaurant" }, { title: "아일랜드 빈티지 커피", description: "아사이볼 맛집. 쇼핑 중 간식으로 추천해요.", icon: "local_cafe"}], details: [{title:"숙소 정보", description:"아웃리거 리조트는 조식이 포함되어 있으며, 클럽 라운지 이용이 가능한지 확인해보세요. 저녁 해피아워도 훌륭합니다.", icon:"hotel"}, {title:"쇼핑 팁", description:"알라모아나 센터는 매우 넓습니다. 미리 가고 싶은 매장의 위치를 파악해두면 시간을 절약할 수 있습니다.", icon:"map"}] }},
+                { id: 'day-7', type: 'day', label: 'Day 7', data: { day: 7, date: "2025.07.13 (일)", title: "와이키키의 마지막 하루, 온전히 즐기기", schedule: [{ time: "09:00", description: "아웃리거에서 여유롭게 조식 즐기기", icon: "breakfast_dining" }, { time: "10:30", description: "와이키키 해변에서 마지막 해수욕 또는 서핑 레슨", icon: "surfing" }, { time: "15:00", description: "칼라카우아 애비뉴에서 기념품 쇼핑하기", icon: "redeem" }, { time: "18:00", description: "가장 로맨틱한 마지막 저녁 식사", icon: "nightlife" }], recommendations: [{ title: "훌라 그릴", description: "듀크스 위층에 위치. 좀 더 차분하고 로맨틱한 분위기.", icon: "restaurant" }, { title: "미셸스 앳 더 콜로니 서프", description: "최고의 오션프론트 파인 다이닝. 특별한 마지막 밤을 위해 추천.", icon: "dinner_dining" }], details: [{title:"서핑 레슨", description:"와이키키 해변에는 초보자를 위한 서핑 스쿨이 많습니다. 당일 신청도 가능하니 도전해보세요.", icon:"surfing"}, {title:"기념품", description:"ABC 스토어 외에도 인터내셔널 마켓 플레이스, 로얄 하와이안 센터에 다양한 기념품 가게들이 있습니다.", icon:"shopping_bag"}] }},
+                { id: 'day-8', type: 'day', label: 'Day 8', data: { day: 8, date: "2025.07.14 (월)", title: "아쉬운 작별, 소중한 추억을 안고", schedule: [{ time: "09:00", description: "마지막 조식 후 짐 정리하기", icon: "local_cafe" }, { time: "10:30", description: "체크아웃 후 마지막으로 와이키키 둘러보기", icon: "shopping_bag" }, { time: "11:20", description: "예약된 차량으로 공항 이동", icon: "airport_shuttle" }, { time: "14:20", description: "호놀룰루 공항에서 한국으로 출발", icon: "flight_takeoff" }], recommendations: [], details: [{title:"체크아웃 후 짐 보관", description:"호텔 컨시어지에 짐을 맡기고 비행기 시간까지 가볍게 주변을 둘러보거나 마지막 식사를 즐기세요.", icon:"luggage"}] }},
+                { id: 'precautions', type: 'section', label: '주의사항', data: { title: '안전하고 즐거운 여행을 위한 주의사항', icon: 'gpp_good', content: [ { category: '안전', items: ['강력한 자외선에 대비해 선크림, 모자, 선글라스는 필수입니다.', '차량 내에 귀중품을 두지 마세요. 주차 시 모든 물건을 가지고 내리세요.', '늦은 밤 인적이 드문 곳은 피하고, 와이키키 중심가에서 활동하세요.'] }, { category: '자연보호', items: ['반드시 산호초 보호(Reef-Safe) 선크림을 사용해주세요.', '바다거북이나 물개를 만지거나 너무 가까이 다가가지 마세요. (법적 처벌 대상)', '지정된 장소에만 쓰레기를 버리고, 해변을 깨끗하게 사용해주세요.'] }, { category: '문화 및 에티켓', items: ['레스토랑, 택시 등 서비스 이용 시 15~20%의 팁을 주는 것이 일반적입니다.', '하와이 원주민 문화와 유적지를 존중하는 마음을 가져주세요.'] } ] }},
+                { id: 'packing-list', type: 'section', label: '준비물', data: { title: '잊지 말고 챙겨야 할 준비물 리스트', icon: 'luggage', content: [ { category: '필수 품목', items: ['여권 및 사본, ESTA 출력본', '항공권(E-ticket)', '국제운전면허증 및 국내면허증', '해외 사용 가능 신용카드, 약간의 현금(달러)'] }, { category: '의류', items: ['수영복, 래시가드, 비치 커버업', '여름옷 여러 벌, 스마트 캐주얼 1벌 (고급 레스토랑용)', '가벼운 가디건이나 바람막이 (냉방 대비)'] }, { category: '물놀이/기타', items: ['산호초 보호 선크림, 알로에 젤', '아쿠아슈즈, 방수팩', '상비약 (소화제, 진통제, 멀미약, 방수밴드 등)', '보조배터리, 카메라, 충전기'] } ] }}
+            ]
+        };
+
+        // --- 앱 초기화 ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const app = new ItineraryApp(
+                '#app', 
+                '#nav-tabs', 
+                '#main-content', 
+                appData
+            );
+            app.init();
+        });
     </script>
 </body>
 </html>
