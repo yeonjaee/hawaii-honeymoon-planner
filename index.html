@@ -14,7 +14,6 @@
         - Report Info: Comparison of Snorkeling/Skydiving options -> Goal: Compare & Decide -> Viz/Presentation: Interactive toggle cards (HTML/CSS/JS) -> Interaction: Users click buttons to switch between detailed views of each option (e.g., Ko Olina vs. Hanauma Bay) -> Justification: Provides a direct, side-by-side comparison feel without cluttering the UI, aiding decision-making.
         - Report Info: Various costs (taxi, activities) -> Goal: Inform on Budget -> Viz/Presentation: Bar Chart (Chart.js/Canvas) -> Interaction: Hover tooltips show specific costs -> Justification: Visually aggregates key expenses mentioned in the report, offering a quick budget overview.
         - Report Info: Logistical details (hotels, transport, tips) -> Goal: Inform & Organize -> Viz/Presentation: Accordion component (HTML/CSS/JS) -> Interaction: Users click to expand/collapse sections -> Justification: Organizes a wide range of practical information into a compact, clean interface.
-        - New Feature: General travel questions -> Goal: Provide quick answers & additional info -> Viz/Presentation: Text input & response area -> Interaction: User types question, clicks button, receives LLM-generated answer -> Justification: Offers on-demand information that is not pre-defined in the report, enhancing user utility and leveraging Gemini's capabilities.
     -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
@@ -317,32 +316,6 @@
                             </div>
                         </div>
 
-                        <!-- Gemini API Integration Section -->
-                        <div class="accordion-item bg-white border border-gray-200 rounded-lg">
-                            <button class="accordion-header w-full text-left p-4 font-bold text-lg flex justify-between items-center hover:bg-gray-50">
-                                <span>✨ Gemini에게 물어보세요</span>
-                                <span class="transform transition-transform duration-300">▼</span>
-                            </button>
-                            <div class="accordion-content px-4 pb-4">
-                                <p class="mt-2 mb-4 text-gray-600">하와이 오아후 신혼여행에 대해 궁금한 점을 Gemini에게 물어보세요. 여행 팁, 현지 문화, 날씨 등 무엇이든 질문할 수 있습니다.</p>
-                                <textarea id="gemini-input" class="w-full p-3 border border-gray-300 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-[#4ECDC4]" rows="4" placeholder="예: 와이키키 주변에서 혼자 산책하기 좋은 곳이 있을까요?"></textarea>
-                                <button id="ask-gemini-btn" class="w-full bg-[#FF6B6B] text-white py-2 px-4 rounded-lg font-semibold hover:bg-rose-700 transition duration-300 flex items-center justify-center">
-                                    <span id="button-text">✨ 질문하기</span>
-                                    <svg id="loading-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                </button>
-                                <div id="gemini-response" class="mt-4 p-4 bg-cyan-50 rounded-lg border border-cyan-200 hidden">
-                                    <p class="font-bold text-cyan-800 mb-2">Gemini의 답변:</p>
-                                    <div id="gemini-response-text" class="text-gray-700 whitespace-pre-wrap"></div>
-                                </div>
-                                <div id="gemini-error" class="mt-4 p-4 bg-red-100 rounded-lg border border-red-200 text-red-700 hidden">
-                                    <p class="font-bold mb-2">오류 발생!</p>
-                                    <p id="gemini-error-text"></p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -561,73 +534,6 @@
             document.querySelector(`button[onclick="showActivityDetail('${type}', '${detail}')"]`).classList.add('bg-[#4ECDC4]', 'text-white');
         }
 
-        // Gemini API Integration Logic
-        const geminiInput = document.getElementById('gemini-input');
-        const askGeminiBtn = document.getElementById('ask-gemini-btn');
-        const geminiResponseDiv = document.getElementById('gemini-response');
-        const geminiResponseText = document.getElementById('gemini-response-text');
-        const geminiErrorDiv = document.getElementById('gemini-error');
-        const geminiErrorText = document.getElementById('gemini-error-text');
-        const loadingSpinner = document.getElementById('loading-spinner');
-        const buttonText = document.getElementById('button-text');
-
-        askGeminiBtn.addEventListener('click', async () => {
-            const prompt = geminiInput.value.trim();
-            if (!prompt) {
-                geminiResponseDiv.classList.add('hidden');
-                geminiErrorDiv.classList.remove('hidden');
-                geminiErrorText.textContent = '질문을 입력해 주세요.';
-                return;
-            }
-
-            geminiResponseDiv.classList.add('hidden');
-            geminiErrorDiv.classList.add('hidden');
-            geminiResponseText.textContent = '';
-            loadingSpinner.classList.remove('hidden');
-            buttonText.textContent = '질문 중...';
-            askGeminiBtn.disabled = true;
-
-            let chatHistory = [];
-            chatHistory.push({ role: "user", parts: [{ text: `하와이 오아후 신혼여행과 관련된 질문입니다: ${prompt}` }] });
-
-            const payload = { contents: chatHistory };
-            const apiKey = ""; 
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    const text = result.candidates[0].content.parts[0].text;
-                    geminiResponseText.textContent = text;
-                    geminiResponseDiv.classList.remove('hidden');
-                } else {
-                    geminiErrorDiv.classList.remove('hidden');
-                    geminiErrorText.textContent = '답변을 생성하지 못했습니다. 다시 시도해 주세요.';
-                }
-            } catch (error) {
-                console.error('Error calling Gemini API:', error);
-                geminiErrorDiv.classList.remove('hidden');
-                geminiErrorText.textContent = 'API 호출 중 오류가 발생했습니다: ' + error.message;
-            } finally {
-                loadingSpinner.classList.add('hidden');
-                buttonText.textContent = '✨ 질문하기';
-                askGeminiBtn.disabled = false;
-                // Recalculate accordion height after content loads
-                const currentAccordionItem = askGeminiBtn.closest('.accordion-item');
-                if (currentAccordionItem) {
-                    const content = currentAccordionItem.querySelector('.accordion-content');
-                    content.style.maxHeight = content.scrollHeight + 'px';
-                }
-            }
-        });
     </script>
 </body>
 </html>
