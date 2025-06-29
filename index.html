@@ -3,185 +3,875 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>O'ahu Honeymoon Planner</title>
-    <!-- Tailwind CSS CDN -->
+    <title>와팁 하와이 신혼여행</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts & Icons -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        .tab-active { background-color: #0ea5e9; color: white; font-weight: 700; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
-        .content-card { animation: fadeIn 0.5s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        #nav-container::-webkit-scrollbar { display: none; }
-        #nav-container { -ms-overflow-style: none; scrollbar-width: none; }
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+        }
+        .nav-button.active {
+            background-color: #0d9488; /* teal-600 */
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .content-card {
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            will-change: opacity, transform;
+            min-height: 400px; /* Minimum height to prevent layout shifts */
+        }
+        .content-card.hidden {
+            opacity: 0;
+            transform: translateY(20px);
+            position: absolute;
+            pointer-events: none;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+        /* Ensure strong tags are clearly bold */
+        strong {
+            font-weight: 700; /* Noto Sans KR Bold */
+            color: #1e293b; /* slate-800 */
+        }
+        .restaurant-list {
+            background-color: #f0f9ff; /* sky-50 */
+            border-left: 4px solid #06b6d4; /* cyan-500 */
+            padding: 1rem;
+            margin-top: 1.5rem;
+            border-radius: 0.5rem;
+        }
+        .restaurant-list ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .restaurant-list li {
+            margin-bottom: 0.5rem;
+        }
+        .restaurant-list li:last-child {
+            margin-bottom: 0;
+        }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="bg-slate-50 text-slate-800">
 
-    <div id="app" class="max-w-lg mx-auto bg-white shadow-xl min-h-screen">
+    <div id="app" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
         <!-- Header -->
-        <header class="sticky top-0 bg-white/80 backdrop-blur-lg z-20 shadow-sm">
-            <div class="p-4 text-center border-b">
-                <h1 class="text-2xl font-bold text-sky-600">🌴 O'ahu Honeymoon Planner</h1>
-                <p class="text-sm text-gray-500">2025.07.07 ~ 2025.07.14</p>
-            </div>
-            <nav id="nav-container" class="px-2 py-3 overflow-x-auto whitespace-nowrap">
-                <div id="nav-tabs" class="flex space-x-2">
-                    <!-- JS로 탭 버튼 렌더링 -->
-                </div>
-            </nav>
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-teal-700">Honeymoon</h1>
+            <p class="text-lg text-slate-600 mt-2">2025.07.07 ~ 2025.07.14 | 7박 9일간의 휴양 여정</p>
         </header>
 
-        <!-- Main Content -->
-        <main id="main-content" class="p-4">
-            <!-- JS로 컨텐츠 렌더링 -->
+        <!-- Navigation -->
+        <nav class="flex flex-wrap justify-center gap-2 mb-8 sticky top-4 z-10 bg-slate-50/80 backdrop-blur-sm p-2 rounded-xl">
+            <button data-day="0" class="nav-button active text-sm sm:text-base px-3 py-2 sm:px-4 sm:py-2 rounded-full font-semibold bg-white shadow-sm hover:bg-teal-50">인트로</button>
+            <button data-day="1" class="nav-button text-sm sm:text-base px-3 py-2 sm:px-4 sm:py-2 rounded-full font-semibold bg-white shadow-sm hover:bg-teal-50">1일차</button>
+            <button data-day="2" class="nav-button text-sm sm:text-base px-3 py-2 sm:px-4 sm:py-2 rounded-full font-semibold bg-white shadow-sm hover:bg-teal-50">2일차</button>
+            <button data-day="3" class="nav-button text-sm sm:text-base px-3 py-2 sm:px-4 sm:py-2 rounded-full font-semibold bg-white shadow-sm hover:bg-teal-50">3일차</button>
+            <button data-day="4" class="nav-button text-sm sm:text-base px-3 py-2 sm:px-4 sm:py-2 rounded-full font-semibold bg-white shadow-sm hover:bg-teal-50">4일차</button>
+            <button data-day="5" class="nav-button text-sm sm:text-base px-3 py-2 sm:px-4 sm:py-2 rounded-full font-semibold bg-white shadow-sm hover:bg-teal-50">5일차</button>
+            <button data-day="6" class="nav-button text-sm sm:text-base px-3 py-2 sm:px-4 sm:py-2 rounded-full font-semibold bg-white shadow-sm hover:bg-teal-50">6일차</button>
+            <button data-day="7" class="nav-button text-sm sm:text-base px-3 py-2 sm:px-4 sm:py-2 rounded-full font-semibold bg-white shadow-sm hover:bg-teal-50">7일차</button>
+            <button data-day="8" class="nav-button text-sm sm:text-base px-3 py-2 sm:px-4 sm:py-2 rounded-full font-semibold bg-white shadow-sm hover:bg-teal-50">8일차</button>
+        </nav>
+
+        <!-- Content Area -->
+        <main id="content-area" class="relative">
+            <!-- Content will be injected here by JavaScript -->
         </main>
-    </div>
 
-    <script type="text/javascript">
-        class ItineraryApp {
-            constructor(appSelector, navSelector, contentSelector, data) {
-                this.rootEl = document.querySelector(appSelector);
-                this.navContainer = document.querySelector(navSelector);
-                this.contentContainer = document.querySelector(contentSelector);
-                this.data = data;
-                this.activeTabId = data.tabs[0].id;
-            }
-
-            init() {
-                this.renderNav();
-                this.renderContent();
-                this.updateView();
-            }
-
-            renderNav() {
-                this.data.tabs.forEach(tab => {
-                    const button = document.createElement('button');
-                    button.textContent = tab.label;
-                    button.className = 'px-4 py-2 text-sm font-medium text-gray-600 rounded-full transition-all duration-300 focus:outline-none flex-shrink-0';
-                    button.dataset.id = tab.id;
-                    
-                    button.addEventListener('click', (e) => {
-                        this.activeTabId = e.target.dataset.id;
-                        this.updateView();
-                    });
-                    
-                    this.navContainer.appendChild(button);
-                });
-            }
-            
-            renderContent() {
-                this.contentContainer.innerHTML = '';
-                this.data.tabs.forEach(tabData => {
-                    const article = document.createElement('article');
-                    article.id = tabData.id;
-                    article.className = 'hidden';
-                    
-                    if (tabData.type === 'day') {
-                        article.innerHTML = this.getDayHtml(tabData.data);
-                    } else if (tabData.type === 'section') {
-                        article.innerHTML = this.getSectionHtml(tabData);
-                    }
-                    this.contentContainer.appendChild(article);
-                });
-            }
-            
-            getDayHtml(dayData) {
-                let scheduleHtml = dayData.schedule.map(item => `
-                    <div class="flex items-start space-x-3 mb-4">
-                        <span class="material-symbols-outlined text-sky-500 mt-1">${item.icon}</span>
-                        <div><p class="font-bold text-gray-800">${item.time}</p><p class="text-gray-600">${item.description}</p></div>
-                    </div>`).join('');
-                
-                let recommendationHtml = dayData.recommendations.map(item => `
-                     <div class="flex items-start space-x-3 mb-3">
-                        <span class="material-symbols-outlined text-amber-500 text-base mt-1">${item.icon}</span>
-                        <div><p class="font-semibold text-gray-700">${item.title}</p><p class="text-sm text-gray-500">${item.description}</p></div>
-                    </div>`).join('');
-
-                let detailsHtml = dayData.details && dayData.details.length > 0 ? dayData.details.map(item => `
-                    <div class="flex items-start space-x-3 mb-3">
-                        <span class="material-symbols-outlined text-green-500 text-base mt-1">${item.icon}</span>
-                        <div>
-                            <p class="font-semibold text-gray-700">${item.title}</p>
-                            <p class="text-sm text-gray-500">${item.description}</p>
-                        </div>
-                    </div>`).join('') : '';
-                
-                return `
-                    <div class="bg-white rounded-xl shadow-lg p-5 content-card">
-                        <h2 class="text-xl font-bold mb-1 text-gray-800">DAY ${dayData.day} <span class="text-base font-normal text-gray-500">| ${dayData.date}</span></h2>
-                        <p class="text-md text-sky-600 font-semibold mb-6">${dayData.title}</p>
-                        
-                        <div class="mb-8"><h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2 flex items-center"><span class="material-symbols-outlined mr-2">calendar_month</span>일정</h3>${scheduleHtml}</div>
-                        
-                        <div class="mb-8"><h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2 flex items-center"><span class="material-symbols-outlined mr-2">recommend</span>맛집 & 꿀팁</h3>${recommendationHtml || '<p class="text-sm text-gray-500">오늘은 특별한 추천 없이 여유를 즐겨보세요.</p>'}</div>
-
-                        ${detailsHtml ? `<div><h3 class="font-bold text-lg mb-4 text-gray-700 border-b pb-2 flex items-center"><span class="material-symbols-outlined mr-2">info</span>준비물 & 정보</h3>${detailsHtml}</div>` : ''}
-                    </div>`;
-            }
-
-            getSectionHtml(sectionData) {
-                let contentHtml = sectionData.data.content.map(category => `
-                    <div class="mb-6">
-                        <h4 class="font-bold text-md mb-2 text-gray-700">${category.category}</h4>
-                        <ul class="list-disc list-inside text-gray-600 space-y-1">
-                            ${category.items.map(item => `<li>${item}</li>`).join('')}
+        <!-- Essential Info Modal -->
+        <div id="info-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50 hidden">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b sticky top-0 bg-white z-10">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-2xl font-bold text-teal-700">여행 필수 정보 📋</h3>
+                        <button id="close-modal-btn" class="text-slate-500 hover:text-slate-800 text-2xl">&times;</button>
+                    </div>
+                     <p class="mt-2 text-slate-600">성공적인 휴양을 위한 필수 팁 모음입니다. 교통, 예약, 숙소 활용법 등 중요한 정보를 확인하여 편안한 여행을 준비하세요.</p>
+                </div>
+                <div class="p-6 space-y-6">
+                    <div>
+                        <h4 class="text-xl font-semibold text-slate-700 mb-2">🚗 교통편 및 이동 가이드</h4>
+                        <ul class="list-disc list-inside space-y-2 text-slate-600">
+                            <li><strong>러시아워 회피:</strong> 평일 오전(6-9시) 및 오후(3-6시)의 심각한 교통 체증을 피해서 이동하세요. 특히 와이키키를 벗어날 때 중요합니다.</li>
+                            <li><strong>구글맵 활용:</strong> 이동 전 실시간 교통 상황을 확인하여 최적의 경로를 선택하세요.</li>
+                            <li><strong>공항 셔틀:</strong> 예약된 왕복 셔틀을 이용해 공항 이동의 번거로움을 줄이세요.</li>
+                            <li><strong>와이키키 트롤리 (핑크 라인):</strong> 알라모아나 센터 이동 시, 운전 대신 트롤리를 이용하면 편리하고 경제적입니다.</li>
                         </ul>
                     </div>
-                `).join('');
+                    <div>
+                        <h4 class="text-xl font-semibold text-slate-700 mb-2">📅 주요 액티비티 예약 가이드</h4>
+                        <ul class="list-disc list-inside space-y-2 text-slate-600">
+                            <li><strong>패러세일링:</strong> 7월 성수기에는 3~6개월 전 미리 예약하는 것이 안전합니다.</li>
+                            <li><strong>하나우마 베이 스노클링:</strong> 방문 2일 전 오전 7시(하와이 시간)에 온라인 예약이 열리며, 매우 빠르게 마감됩니다. (월/화 휴무)</li>
+                            <li><strong>루스 크리스 스테이크 하우스:</strong> 저녁 시간에만 운영되므로 사전 예약이 필수입니다.</li>
+                            <li><strong>금요일 불꽃놀이 크루즈:</strong> 인기가 많아 성수기에는 미리 예약해야 합니다.</li>
+                        </ul>
+                    </div>
+                     <div>
+                        <h4 class="text-xl font-semibold text-slate-700 mb-2">🏨 숙소 활용 팁</h4>
+                        <ul class="list-disc list-inside space-y-2 text-slate-600">
+                            <li><strong>조식 확인:</strong> 하얏트 리젠시(불포함) 주변 맛집을 탐색하고, 아웃리거(포함)에서는 호텔 조식을 즐기세요.</li>
+                            <li><strong>부대시설 이용:</strong> 각 호텔의 수영장, 라운지, 스파 등을 적극 활용하여 휴양의 질을 높이세요.</li>
+                            <li><strong>체크인/아웃 시간:</strong> 짐 보관 서비스를 활용해 체크인/아웃 시간 사이의 공백을 효율적으로 사용하세요.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold text-slate-700 mb-2">💡 기타 유용한 정보</h4>
+                        <ul class="list-disc list-inside space-y-2 text-slate-600">
+                            <li><strong>준비물:</strong> 수영복, 선크림, 선글라스는 필수! 해양 액티비티를 위해 멀미약도 챙기세요.</li>
+                            <li><strong>드레스 코드:</strong> 루스 크리스 스테이크 하우스 방문 시 '비즈니스 캐주얼'을 준비하세요. (슬리퍼, 반바지, 모자 X)</li>
+                            <li><strong>현금 준비:</strong> 하나우마 베이 주차비 등 소액 현금이 필요한 경우가 있습니다.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                return `
-                    <div class="bg-white rounded-xl shadow-lg p-5 content-card">
-                        <h2 class="text-xl font-bold mb-6 text-gray-800 flex items-center"><span class="material-symbols-outlined mr-2 text-sky-600">${sectionData.data.icon}</span>${sectionData.data.title}</h2>
-                        ${contentHtml}
-                    </div>`;
+    </div>
+
+    <script>
+        const itineraryData = [
+            {
+                day: 0,
+                title: "오아후 허니문에 오신 것을 환영합니다!",
+                date: "Introductory Guide",
+                content: `
+                    <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                        <div class="grid md:grid-cols-2 gap-8 mb-8">
+                            <div>
+                                <h3 class="text-xl font-semibold text-slate-700 mb-3 border-l-4 border-teal-500 pl-3">🌟 주요 활동 요약</h3>
+                                <div class="space-y-3">
+                                    <div class="flex items-center bg-teal-50 p-3 rounded-lg">
+                                        <span class="text-2xl mr-4">🪂</span>
+                                        <div><strong>패러세일링 (3일차):</strong> 와이키키 상공을 나는 짜릿한 경험! 사전 예약 필수.</div>
+                                    </div>
+                                    <div class="flex items-center bg-teal-50 p-3 rounded-lg">
+                                        <span class="text-2xl mr-4">🐠</span>
+                                        <div><strong>스노클링 (5일차):</strong> 하나우마 베이 또는 샥스 코브에서 만나는 바닷속 신비.</div>
+                                    </div>
+                                    <div class="flex items-center bg-teal-50 p-3 rounded-lg">
+                                        <span class="text-2xl mr-4">🥩</span>
+                                        <div><strong>쇼핑:</strong> 다양한 쇼핑 </div>
+                                    </div>
+                                </div>
+                                <button id="open-modal-btn" class="mt-4 w-full bg-amber-400 text-slate-800 font-bold py-2 px-4 rounded-lg hover:bg-amber-500 transition">여행 필수 정보 전체 보기 📋</button>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold text-slate-700 mb-3 border-l-4 border-teal-500 pl-3">📊 일자별 활동 강도</h3>
+                                <p class="text-sm text-slate-500 mb-2">여행의 전체적인 페이스를 확인하고 여유로운 휴양을 계획하세요.</p>
+                                <div class="chart-container">
+                                    <canvas id="activityChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center p-4 bg-slate-100 rounded-lg">
+                            <p class="text-slate-700">상단의 날짜 버튼을 클릭하여 매일의 상세 일정을 확인해보세요!</p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                day: 1,
+                title: "와이키키에서의 로맨틱한 첫 만남",
+                date: "2025.07.07 (월)",
+                schedule: [
+                    {
+                        time: "AM 11:50 - PM 01:30",
+                        description: `
+                            <p class="mb-2">🛬 <strong>도착 및 호텔 이동</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>호놀룰루 공항(HNL)에 AM 11:50 도착 후 입국 수속 및 짐 찾기 (약 1시간 소요).</li>
+                                <li>예약된 왕복 투어 셔틀을 이용하여 <strong>하얏트 리젠시 와이키키 호텔</strong>로 이동합니다. (공항 ↔ 호텔 소요 시간 약 30-45분)</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "쿠아 아이나 (Kua 'Aina Burger)", type: "수제 버거"},
+                            {name: "아사히 볼 (Sunrise Shack Waikiki)", type: "아사이 볼 / 커피"}
+                        ]
+                    },
+                    {
+                        time: "PM 01:30 - PM 03:00",
+                        description: `
+                            <p class="mb-2">🍽️ <strong>점심 식사 및 호텔 짐 보관</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>호텔 체크인 시간(오후 3시) 전까지 짐을 맡기고, 호텔 주변의 캐주얼한 레스토랑에서 여유롭게 점심 식사를 즐깁니다.</li>
+                                <li>하와이의 활기찬 분위기에 적응하며 편안한 시간을 보냅니다.</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "듀크스 와이키키 (Duke's Waikiki)", type: "캐주얼 다이닝, 비치프론트"},
+                            {name: "치즈버거 인 파라다이스 (Cheeseburger in Paradise)", type: "미국식, 버거"}
+                        ]
+                    },
+                    {
+                        time: "PM 03:00 - PM 06:00",
+                        description: `
+                            <p class="mb-2">🏖️ <strong>와이키키 해변 휴식 및 호텔 시설 즐기기</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>호텔 체크인 후, 바로 앞에 펼쳐진 <strong>와이키키 해변</strong>을 산책하거나 선탠을 즐기며 시차 적응 및 휴식을 취합니다.</li>
+                                <li>호텔 수영장 시설을 이용하며 편안한 오후를 보냅니다.</li>
+                            </ul>
+                        `,
+                        restaurants: []
+                    },
+                    {
+                        time: "PM 07:00 - PM 09:00",
+                        description: `
+                            <p class="mb-2">🍽️ <strong>로맨틱 디너 & 와이키키 밤거리 산책</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>와이키키 해변이 보이는 '<strong>엣지 오브 와이키키(The Edge of Waikiki)</strong>'와 같은 바다 전망 레스토랑에서 첫날 저녁 식사를 합니다.</li>
+                                <li>식사 후에는 <strong>칼라카우아 애비뉴</strong>를 따라 와이키키의 활기찬 밤거리를 산책하며 첫날 밤을 마무리합니다.</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "엣지 오브 와이키키 (The Edge of Waikiki)", type: "고급, 해산물, 바다 전망"},
+                            {name: "하우스 위드아웃 어 키 (House Without a Key)", type: "캐주얼, 라이브 음악"}
+                        ]
+                    }
+                ]
+            },
+            {
+                day: 2,
+                title: "와이키키의 매력에 빠지다",
+                date: "2025.07.08 (화)",
+                schedule: [
+                    {
+                        time: "AM 08:30 - AM 10:00",
+                        description: `
+                            <p class="mb-2">🥐 <strong>자유 시간 및 브런치</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>조식이 불포함된 하얏트 리젠시 주변의 브런치 맛집을 탐색하여 여유로운 아침 식사를 즐깁니다.</li>
+                                <li>이후 호텔 수영장 또는 와이키키 해변 산책하며 오전 시간을 보냅니다.</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "크래킹 키친 (Cracking Kitchen)", type: "씨푸드 보일"},
+                            {name: "카페 카이 (Cafe Kai)", type: "아침 식사, 캐주얼"}
+                        ]
+                    },
+                    {
+                        time: "AM 10:00 - PM 02:00",
+                        description: `
+                            <p class="mb-2">🛍️ <strong>알라모아나 센터 쇼핑</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>오후 러시아워를 피하여 <strong>와이키키 트롤리 핑크 라인</strong> (약 30분 소요)을 이용하여 <strong>알라모아나 센터</strong>로 이동합니다.</li>
+                                <li>하와이 최대의 쇼핑몰에서 쇼핑을 즐기거나, 카페에서 휴식을 취합니다. (알라모아나 센터 영업시간 <strong>10:00-20:00</strong>)</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "마키 비스트로 (Mālie Bistro)", type: "하와이안 퓨전"},
+                            {name: "탄초 (Tancho)", type: "일식, 초밥"}
+                        ]
+                    },
+                    {
+                        time: "PM 02:00 - PM 05:00",
+                        description: `
+                            <p class="mb-2">💆‍♀️ <strong>와이키키 복귀 및 자유 시간</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>알라모아나에서 와이키키로 복귀하여 호텔에서 휴식을 취하거나, 주변을 자유롭게 탐방합니다.</li>
+                            </ul>
+                        `,
+                        restaurants: []
+                    },
+                    {
+                        time: "PM 06:00 - PM 08:00",
+                        description: `
+                            <p class="mb-2">🎶 <strong>비치프론트 다이닝</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>와이키키 해변의 '<strong>카니 카 필라 그릴(Kani Ka Pila Grille)</strong>'에서 라이브 음악과 함께 다이아몬드 헤드 전망을 즐기며 저녁 식사를 합니다.</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "카니 카 필라 그릴 (Kani Ka Pila Grille)", type: "현지식, 라이브 음악"},
+                            {name: "하이즈 스테이크 하우스 (Hy's Steak House)", type: "고급 스테이크"}
+                        ]
+                    }
+                ]
+            },
+            {
+                day: 3,
+                title: "하늘을 나는 짜릿함과 미식의 향연",
+                date: "2025.07.09 (수)",
+                schedule: [
+                    {
+                        time: "AM 09:30 - AM 10:00",
+                        description: `
+                            <p class="mb-2">🚗 <strong>패러세일링 미팅 장소 이동</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>오전 러시아워(9시 30분 이후 출발 권장)를 피해 렌터카 또는 택시로 <strong>PIER E (1025 Ala Moana Blvd)</strong>로 이동합니다. (와이키키에서 약 15분 소요)</li>
+                            </ul>
+                        `,
+                        restaurants: []
+                    },
+                    {
+                        time: "AM 10:00 - PM 12:00",
+                        description: `
+                            <p class="mb-2">🪂 <strong>패러세일링 체험</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>사전 예약 필수! 와이키키 앞바다에서 짜릿한 패러세일링을 즐깁니다. (전체 투어 1.5~2시간 소요)</li>
+                                <li>수영복, 선크림, 멀미약 등을 준비합니다. (유류할증료 <strong>$7/1인</strong> 현장 지불)</li>
+                            </ul>
+                        `,
+                        restaurants: []
+                    },
+                    {
+                        time: "PM 12:00 - PM 01:00",
+                        description: `
+                            <p class="mb-2">🍽️ <strong>점심 식사 및 호텔 복귀</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>액티비티 후 와이키키로 복귀하여 가볍게 점심 식사를 합니다.</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "마루카메 우동 (Marukame Udon Waikiki)", type: "일본식 우동"},
+                            {name: "라 마르 오키드 (La Mer Orchid)", type: "프렌치, 고급"}
+                        ]
+                    },
+                    {
+                        time: "PM 02:00 - PM 05:00",
+                        description: `
+                            <p class="mb-2">💆‍♀️ <strong>휴식 또는 스파</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>피로 회복을 위해 호텔에서 휴식을 취하거나 '<strong>아바사 스파(Abhasa Spa)</strong>'에서 커플 마사지를 받으며 여유를 즐깁니다. (사전 예약 권장)</li>
+                            </ul>
+                        `,
+                        restaurants: []
+                    },
+                    {
+                        time: "PM 06:30 - PM 08:30",
+                        description: `
+                            <p class="mb-2">🥩 <strong>루스 크리스 스테이크 하우스</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>사전 예약 필수! <strong>와이키키 비치 워크</strong> 지점에서 특별한 저녁 식사를 합니다.</li>
+                                <li>'<strong>비즈니스 캐주얼</strong>' 드레스 코드(남성 셔츠 상의, 커버된 신발 권장)를 준수해야 합니다.</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "루스 크리스 스테이크 하우스 (Ruth's Chris Steak House)", type: "고급 스테이크"}
+                        ]
+                    }
+                ]
+            },
+            {
+                day: 4,
+                title: "동부 해안 드라이브와 평화로운 휴식",
+                date: "2025.07.10 (목)",
+                schedule: [
+                    {
+                        time: "AM 09:30 - AM 11:00",
+                        description: `
+                            <p class="mb-2">🚗 <strong>동부 해안 드라이브 시작</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>오전 러시아워(9시 30분 이후 출발)를 피해 렌터카로 오아후 <strong>동부 해안 드라이브</strong>를 시작합니다. (와이키키에서 약 40-60분 소요)</li>
+                            </ul>
+                        `,
+                        restaurants: []
+                    },
+                    {
+                        time: "AM 11:00 - PM 01:00",
+                        description: `
+                            <p class="mb-2">🌅 <strong>해안 명소 감상</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li><strong>마카푸우 포인트</strong>, <strong>라니카이 비치</strong> 등 그림 같은 해변과 전망대에서 아름다운 풍경을 감상하며 사진을 찍습니다.</li>
+                            </ul>
+                        `,
+                        restaurants: []
+                    },
+                    {
+                        time: "PM 01:00 - PM 02:00",
+                        description: `
+                            <p class="mb-2">🍽️ <strong>점심 식사</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>동부 해안 지역의 캐주얼한 레스토랑에서 점심 식사를 합니다.</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "코나 브루잉 컴퍼니 (Kona Brewing Co.)", type: "하와이안 펍"},
+                            {name: "파이널리 와이아나 (Finally Waiana)", type: "현지식, 캐주얼"}
+                        ]
+                    },
+                    {
+                        time: "PM 02:00 - PM 03:00",
+                        description: `
+                            <p class="mb-2">🚗 <strong>코올리나 라군 이동</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>오후 러시아워를 피하기 위해 일찍 서쪽으로 이동하여 한적한 '<strong>코올리나 라군</strong>'으로 향합니다. (와이키키에서 약 40-50분 소요)</li>
+                            </ul>
+                        `,
+                        restaurants: []
+                    },
+                    {
+                        time: "PM 03:00 - PM 05:30",
+                        description: `
+                            <p class="mb-2">🏝️ <strong>코올리나 센터 및 라군 주변 탐방</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>코올리나 라군 주변을 산책하며 평화로운 분위기를 즐기거나, **코올리나 센터**에서 가볍게 쇼핑을 즐깁니다.</li>
+                                <li>라군에서 안전하게 물놀이를 하거나 해변에서 휴식을 취할 수도 있습니다.</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "몽키팟 키친 (Monkeypod Kitchen by Merriman)", type: "하와이안 퓨전, 라이브 음악"}
+                        ]
+                    },
+                    {
+                        time: "PM 05:30 - PM 06:30",
+                        description: `
+                            <p class="mb-2">🚗 <strong>와이키키 복귀</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>오후 러시아워를 피해 와이키키로 복귀합니다.</li>
+                            </ul>
+                        `,
+                        restaurants: []
+                    },
+                    {
+                        time: "PM 07:00 - PM 09:00",
+                        description: `
+                            <p class="mb-2">🍴 <strong>자유로운 저녁 식사</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>와이키키 내 다양한 레스토랑에서 자유롭게 저녁 식사를 즐깁니다.</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "야드 하우스 (Yard House)", type: "아메리칸 펍, 다양한 맥주"},
+                            {name: "더 프레시 캣치 (The Fresh Catch)", type: "하와이안 씨푸드"}
+                        ]
+                    }
+                ]
+            },
+            {
+                day: 5,
+                title: "바닷속 신비로운 세계 탐험",
+                date: "2025.07.11 (금)",
+                schedule: [
+                    {
+                        time: "AM 07:00 - AM 08:00",
+                        description: `
+                            <p class="mb-2">🚗 <strong>스노클링 명소 이동</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>하나우마 베이 사전 예약(방문 2일 전 하와이 시간 오전 7시 예약 오픈)에 성공했다면 해당 시간에 맞춰 이동합니다. (또는 샥스 코브로 이동)</li>
+                            </ul>
+                        `,
+                        restaurants: []
+                    },
+                    {
+                        time: "AM 08:00 - PM 12:00",
+                        description: `
+                            <p class="mb-2">🐠 <strong>스노클링 명소 탐방</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>'<strong>하나우마 베이</strong>' 또는 '<strong>샥스 코브</strong>'에서 다양한 열대어와 함께 스노클링을 즐깁니다.</li>
+                                <li>(하나우마 베이: 입장료 <strong>$25/인</strong>, 주차비 <strong>$3</strong> 현금. 샥스 코브: 여름 시즌 적합)</li>
+                            </ul>
+                        `,
+                        restaurants: []
+                    },
+                    {
+                        time: "PM 12:00 - PM 01:00",
+                        description: `
+                            <p class="mb-2">🍽️ <strong>점심 식사</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>스노클링 장소 근처 또는 와이키키로 복귀하여 점심 식사를 합니다.</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "테디스 비거 버거스 (Teddy's Bigger Burgers)", type: "미국식 버거"},
+                            {name: "코노스 와이키키 (Kono's Waikiki)", type: "포크 요리"}
+                        ]
+                    },
+                    {
+                        time: "PM 02:00 - PM 05:00",
+                        description: `
+                            <p class="mb-2">🛍️ <strong>자유 시간 및 쇼핑</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>호텔에서 휴식을 취하거나, 알라모아나 센터에서 쇼핑을 즐깁니다.</li>
+                            </ul>
+                        `,
+                        restaurants: []
+                    },
+                    {
+                        time: "PM 05:00 - PM 09:00",
+                        description: `
+                            <p class="mb-2">🎆 <strong>선셋 크루즈 & 불꽃놀이</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>금요일 밤의 하이라이트! <strong>케왈로만 항구</strong>에서 출발하는 선셋 크루즈에 탑승하여 석양과 <strong>힐튼 하와이안 빌리지 불꽃놀이</strong>를 감상합니다. (사전 예약 필수, 약 3시간 소요)</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "선셋 크루즈 내 식사 (상품에 따라)", type: "해산물, 뷔페"},
+                            {name: "피쉬 웍스 (Fish Works)", type: "퓨전 해산물"}
+                        ]
+                    }
+                ]
+            },
+            {
+                day: 6,
+                title: "새로운 숙소에서의 재충전",
+                date: "2025.07.12 (토)",
+                schedule: [
+                    {
+                        time: "AM 08:30 - AM 11:00",
+                        description: `
+                            <p class="mb-2">🏨 <strong>하얏트 리젠시 체크아웃</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>하얏트 리젠시 와이키키 호텔에서 체크아웃(오전 11시)을 합니다. 짐은 호텔에 맡겨둡니다.</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "알로하 테이블 (Aloha Table)", type: "하와이안 퓨전, 캐주얼"},
+                            {name: "에그 앤 띵스 (Egg's N Things)", type: "미국식 아침, 팬케이크"}
+                        ]
+                    },
+                    {
+                        time: "AM 11:00 - PM 01:00",
+                        description: `
+                            <p class="mb-2">🚶‍♀️ <strong>아웃리거로 이동 및 점심</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>새로운 숙소인 <strong>아웃리거 와이키키 파라다이스 호텔</strong>로 이동합니다 (도보 또는 짧은 택시). 짐을 맡기고 주변에서 점심 식사를 합니다.</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "더 피그 앤 더 레이디 (The Pig and The Lady)", type: "베트남 퓨전"},
+                            {name: "쇼어 파이어 (Shorefire)", type: "하와이안 바비큐"}
+                        ]
+                    },
+                    {
+                        time: "PM 03:00 - PM 06:00",
+                        description: `
+                            <p class="mb-2">🛍️ <strong>와이키키/로얄 하와이안 센터 쇼핑</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>아웃리거 체크인(오후 3시) 후, 호텔 주변의 <strong>로얄 하와이안 센터</strong> 또는 <strong>와이키키 메인 거리</strong>를 따라 쇼핑을 즐깁니다.</li>
+                                <li>다양한 브랜드 매장과 기념품 샵을 탐방하며 여유로운 시간을 보냅니다.</li>
+                            </ul>
+                        `,
+                        restaurants: []
+                    },
+                    {
+                        time: "PM 07:00 - PM 09:00",
+                        description: `
+                            <p class="mb-2">🍕 <strong>호텔 주변 탐방 및 저녁 식사</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>호텔 내 '<strong>아페티토(Appetito)</strong>' 레스토랑 또는 와이키키 중심가에서 저녁 식사를 합니다.</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "아페티토 (Appetito Craft Pizza & Wine Bar)", type: "이탈리안, 피자"},
+                            {name: "스카이 와이키키 (Sky Waikiki)", type: "루프탑 바, 칵테일"}
+                        ]
+                    }
+                ]
+            },
+            {
+                day: 7,
+                title: "오아후에서의 마지막 휴양",
+                date: "2025.07.13 (일)",
+                schedule: [
+                    {
+                        time: "AM 08:00 - AM 09:30",
+                        description: `
+                            <p class="mb-2">🍳 <strong>여유로운 조식 & 해변 산책</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>아웃리거 와이키키 파라다이스 호텔에서 제공되는 조식(포함)을 즐깁니다.</li>
+                                <li>호텔 앞 <strong>와이키키 해변</strong>을 따라 산책하거나 호텔 수영장에서 여유를 만끽합니다.</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "코나 커피 퍼블릭 (Kona Coffee Purveyors)", type: "고급 커피, 페이스트리"},
+                            {name: "아울라니 디즈니 리조트 캐릭터 조식 (사전 예약 필수)", type: "캐릭터 다이닝, 가족 친화적"}
+                        ]
+                    },
+                    {
+                        time: "AM 09:30 - PM 01:00",
+                        description: `
+                            <p class="mb-2">🏖️ <strong>호텔 및 해변 자유 시간</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>수영장에서 휴식을 취하거나 해변에서 마지막으로 하와이의 햇살을 즐깁니다.</li>
+                            </ul>
+                        `,
+                        restaurants: []
+                    },
+                    {
+                        time: "PM 01:00 - PM 02:00",
+                        description: `
+                            <p class="mb-2">🍽️ <strong>점심 식사</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>와이키키 내 캐주얼한 레스토랑에서 점심 식사를 합니다.</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "시즈 카페 (Sunrise Shack Waikiki)", type: "캐주얼, 브런치"},
+                            {name: "오노 씨푸드 (Ono Seafood)", type: "포케 맛집"}
+                        ]
+                    },
+                    {
+                        time: "PM 02:00 - PM 05:00",
+                        description: `
+                            <p class="mb-2">🛍️ <strong>와이키키 마지막 쇼핑 및 자유 시간</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>남은 기념품을 구입하거나, 다시 방문하고 싶었던 상점을 둘러보며 자유로운 쇼핑 시간을 가집니다.</li>
+                                <li>이후 호텔로 돌아와 휴식을 취하거나 스파를 이용할 수 있습니다.</li>
+                            </ul>
+                        `,
+                        restaurants: []
+                    },
+                    {
+                        time: "PM 06:30 - PM 08:30",
+                        description: `
+                            <p class="mb-2">🥂 <strong>마지막 만찬</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>오아후에서의 마지막 밤을 기념하며, '<strong>하우스 위드아웃 어 키(House Without a Key)</strong>'와 같은 특별한 레스토랑에서 저녁 식사를 즐깁니다.</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "하우스 위드아웃 어 키 (House Without a Key)", type: "캐주얼 다이닝, 라이브 음악, 해변 전망"},
+                            {name: "모리모토 아시아 (Morimoto Asia Waikiki)", type: "아시안 퓨전, 고급"}
+                        ]
+                    }
+                ]
+            },
+            {
+                day: 8,
+                title: "아쉬운 작별",
+                date: "2025.07.14 (월)",
+                schedule: [
+                    {
+                        time: "AM 08:00 - AM 09:00",
+                        description: `
+                            <p class="mb-2">🍳 <strong>마지막 아침 식사</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>호텔에서 제공되는 조식을 여유롭게 즐깁니다.</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "아웃리거 와이키키 파라다이스 내 조식 레스토랑", type: "호텔 조식 뷔페"},
+                            {name: "코페 로아 커피 (Kope Lani Coffee)", type: "캐주얼 카페"}
+                        ]
+                    },
+                    {
+                        time: "AM 09:00 - AM 11:00",
+                        description: `
+                            <p class="mb-2">🏨 <strong>체크아웃 및 짐 보관</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>아웃리거 와이키키 파라다이스 호텔 체크아웃(오전 11시)을 완료합니다. 짐은 호텔에 맡겨둡니다.</li>
+                            </ul>
+                        `,
+                        restaurants: []
+                    },
+                    {
+                        time: "AM 11:00 - PM 01:00",
+                        description: `
+                            <p class="mb-2">🚶‍♀️ <strong>와이키키 주변 산책 및 자유 시간</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>비행 시간 전까지 와이키키 주변을 가볍게 산책하거나, 카페에서 커피 한 잔의 여유를 즐기며 마지막 순간을 만끽합니다.</li>
+                            </ul>
+                        `,
+                        restaurants: [
+                            {name: "더 베이 (The Bay)", type: "캐주얼, 해변가"},
+                            {name: "로얄 하와이안 베이커리 (Royal Hawaiian Bakery)", type: "빵, 디저트"}
+                        ]
+                    },
+                    {
+                        time: "PM 01:00 - PM 01:45",
+                        description: `
+                            <p class="mb-2">🛫 <strong>공항 이동</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>미리 예약된 왕복 투어 셔틀을 이용하여 호놀룰루 국제공항(HNL)으로 이동합니다. (PM 14:20 하와이 출발이므로 최소 2시간 30분 전 공항 도착 권장)</li>
+                            </ul>
+                        `,
+                        restaurants: []
+                    },
+                    {
+                        time: "PM 01:45 - PM 02:20",
+                        description: `
+                            <p class="mb-2">✈️ <strong>출국 수속 및 탑승</strong></p>
+                            <ul class="list-disc list-inside ml-4 space-y-1">
+                                <li>출국 수속을 마치고 탑승합니다. 아름다운 하와이에서의 추억을 안고 한국으로 출발합니다.</li>
+                            </ul>
+                        `,
+                        restaurants: []
+                    }
+                ]
             }
+        ];
 
-            updateView() {
-                this.navContainer.querySelectorAll('button').forEach(btn => {
-                    btn.classList.toggle('tab-active', btn.dataset.id === this.activeTabId);
-                });
+        const contentArea = document.getElementById('content-area');
+        const navButtons = document.querySelectorAll('.nav-button');
 
-                this.contentContainer.querySelectorAll('article').forEach(article => {
-                    article.classList.toggle('hidden', article.id !== this.activeTabId);
+        function renderContent(day) {
+            contentArea.innerHTML = '';
+            const data = itineraryData.find(item => item.day == day);
+            const card = document.createElement('div');
+            card.className = 'content-card bg-white rounded-lg shadow-lg p-6 md:p-8';
+
+            if (data.day === 0) {
+                card.innerHTML = data.content;
+            } else {
+                 let scheduleHtml = '';
+                 data.schedule.forEach(item => {
+                     let restaurantsHtml = '';
+                     if (item.restaurants && item.restaurants.length > 0) {
+                         restaurantsHtml += `
+                             <div class="restaurant-list">
+                                 <h4 class="text-md font-semibold text-cyan-700 mb-2">추천 식당 🍽️</h4>
+                                 <ul>
+                         `;
+                         item.restaurants.forEach(resto => {
+                             restaurantsHtml += `<li><strong>${resto.name}</strong> (${resto.type})</li>`;
+                         });
+                         restaurantsHtml += `</ul></div>`;
+                     }
+
+                     scheduleHtml += `
+                         <div class="mb-6 last:mb-0">
+                             <h3 class="text-xl font-semibold text-teal-700 mb-2 border-b-2 border-teal-200 pb-2">${item.time}</h3>
+                             ${item.description}
+                             ${restaurantsHtml}
+                         </div>
+                     `;
+                 });
+
+                 card.innerHTML = `
+                    <div class="mb-6 text-center md:text-left">
+                        <p class="text-sm font-semibold text-teal-600">${data.date}</p>
+                        <h2 class="text-2xl md:text-3xl font-bold text-slate-800">${data.title}</h2>
+                    </div>
+                    <div class="space-y-6">
+                        ${scheduleHtml}
+                    </div>
+                `;
+            }
+            contentArea.appendChild(card);
+            
+            if (data.day === 0) {
+                initializeChart();
+                document.getElementById('open-modal-btn').addEventListener('click', () => {
+                    document.getElementById('info-modal').classList.remove('hidden');
                 });
-                
-                this.rootEl.parentElement.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+        
+        function handleNavClick(e) {
+            const day = e.target.dataset.day;
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            
+            const currentCard = contentArea.querySelector('.content-card');
+            if (currentCard) {
+                currentCard.classList.add('hidden');
+                setTimeout(() => {
+                    renderContent(day);
+                }, 300);
+            } else {
+                renderContent(day);
             }
         }
 
-        // --- 데이터 ---
-        const appData = {
-            tabs: [
-                { id: 'day-1', type: 'day', label: 'Day 1', data: { day: 1, date: "2025.07.07 (월)", title: "도착 그리고 와이키키의 첫인상", schedule: [{ time: "11:50", description: "호놀룰루 공항(HNL) 도착 후 가이드 미팅 및 와이키키 이동", icon: "flight_land" }, { time: "14:30", description: "쉐라톤 와이키키 호텔 체크인 및 휴식", icon: "hotel" }, { time: "16:00", description: "와이키키 해변 산책하며 하와이 적응하기", icon: "beach_access" }, { time: "18:30", description: "자유로운 저녁 식사 (시차 적응을 위해 가볍게 추천)", icon: "restaurant" }], recommendations: [{ title: "마루카메 우동", description: "가성비 최고의 우동 맛집. 늘 줄이 길지만 회전율이 빨라요.", icon: "ramen_dining" }, { title: "로얄 하와이안 센터 푸드코트", description: "다양한 음식을 한 곳에서 빠르고 간편하게 즐길 수 있어요.", icon: "local_mall" }], details: [{title: "숙소 정보", description: "쉐라톤 와이키키는 성인 전용 '엣지 인피니티 풀'이 유명합니다. 수영복을 미리 챙겨 이용해보세요.", icon:"hotel"}, {title:"공항 픽업", description:"예약된 투어 차량을 이용해 편하게 이동합니다. 가이드의 안내에 따라주세요.", icon:"airport_shuttle"}] }},
-                { id: 'day-2', type: 'day', label: 'Day 2', data: { day: 2, date: "2025.07.08 (화)", title: "바닷속 탐험과 로맨틱 인피니티 풀", schedule: [{ time: "오전", description: "하나우마 베이 스노클링 (온라인 사전 예약 필수!)", icon: "scuba_diving" }, { time: "13:30", description: "와이키키 복귀 후 점심 식사", icon: "lunch_dining" }, { time: "15:00", description: "쉐라톤의 명물 '엣지 인피니티 풀'에서 휴양", icon: "pool" }, { time: "19:00", description: "호텔 근처에서 로맨틱한 저녁 식사", icon: "nightlife" }], recommendations: [{ title: "하나우마 베이 예약", description: "방문 이틀 전 오전 7시(현지 시각)에 공식 사이트에서 예약 필수!", icon: "event_available" }, { title: "치즈케이크 팩토리", description: "다양한 메뉴와 맛있는 치즈케이크. 양이 많으니 참고하세요.", icon: "cake" }], details: [{title: "스노클링 준비물", description:"산호초 보호(Reef-safe) 선크림, 수영복, 타월, 아쿠아슈즈, 방수팩을 준비하세요. 장비 대여도 가능합니다.", icon:"checklist"},{title:"온라인 예약", description:"하나우마 베이 공식 홈페이지(pros.hnl.info)에서 방문 2일 전 오전 7시에 예약하세요. 경쟁이 치열합니다.", icon:"public"}] }},
-                { id: 'day-3', type: 'day', label: 'Day 3', data: { day: 3, date: "2025.07.09 (수)", title: "하늘을 날다! 자유로운 노스쇼어 완전 정복", schedule: [{ time: "08:00", description: "노스쇼어로 이동 (렌터카 추천)", icon: "directions_car" }, { time: "10:00", description: "스카이다이빙 체험 (사전 예약 필수)", icon: "paragliding" }, { time: "14:00", description: "노스쇼어 명물 새우 트럭에서 점심", icon: "local_shipping" }, { time: "15:30", description: "라니아케아 비치에서 쉬고 있는 바다거북 보기", icon: "surfing" }, { time: "16:30", description: "할레이바 타운 구경 및 디저트 타임", icon: "shopping_bag" }], recommendations: [{ title: "지오반니 새우 트럭", description: "가장 유명한 원조 스캄피 새우. 현금 준비하면 편리해요.", icon: "restaurant_menu" }, { title: "마츠모토 쉐이브 아이스", description: "할레이바의 명물 무지개 빙수. 더위를 식혀보세요.", icon: "icecream" }], details: [{title:"스카이다이빙 업체", description:"'퍼시픽 스카이다이빙', '스카이다이브 하와이' 등이 유명합니다. 온라인으로 미리 예약하세요.", icon:"corporate_fare"}, {title:"복장 안내", description:"편안한 바지와 운동화를 착용하세요. 상공은 추울 수 있으니 얇은 긴팔 옷을 챙기는 것이 좋습니다.", icon:"checkroom"}] }},
-                { id: 'day-4', type: 'day', label: 'Day 4', data: { day: 4, date: "2025.07.10 (목)", title: "여유로운 휴식, 그리고 최고의 스테이크", schedule: [{ time: "오전", description: "늦잠, 호텔 수영장, 비치 등 완전한 자유시간", icon: "self_improvement" }, { time: "오후", description: "와이키키 시내 쇼핑 및 산책", icon: "styler" }, { time: "19:00", description: "루스 크리스 스테이크 하우스에서 최고의 저녁 식사", icon: "dinner_dining" }], recommendations: [{ title: "루스 크리스 스테이크 예약", description: "최고급 스테이크. 해피아워(17-18시)를 노리면 가성비가 좋아요. 사전 예약 강력 추천!", icon: "event_available" }, { title: "와이켈레 프리미엄 아울렛", description: "쇼핑을 좋아한다면 렌터카로 방문 추천. 큰 폭의 할인을 받을 수 있어요.", icon: "shopping_cart" }], details: [{title:"레스토랑 예약", description:"'루스 크리스 스테이크 하우스'는 인기가 많으므로 OpenTable 앱이나 웹사이트로 미리 예약하세요.", icon:"edit_calendar"}, {title:"드레스 코드", description:"고급 레스토랑 방문 시, 남성은 긴바지와 카라가 있는 셔츠, 여성은 원피스 등 스마트 캐주얼 복장을 추천합니다.", icon:"diamond"}] }},
-                { id: 'day-5', type: 'day', label: 'Day 5', data: { day: 5, date: "2025.07.11 (금)", title: "환상의 동부 해안 드라이브", schedule: [{ time: "오전", description: "동부 해안선 따라 드라이브 (렌터카 추천)", icon: "map" }, { time: "정오", description: "마카푸우 포인트 전망대에서 멋진 인생샷 남기기", icon: "photo_camera" }, { time: "오후", description: "카일루아 비치 또는 라니카이 비치에서 휴식", icon: "beach_access" }, { time: "저녁", description: "쉐라톤 와이키키에서의 마지막 밤 즐기기", icon: "wine_bar" }], recommendations: [{ title: "하우스 위드아웃 어 키", description: "할레쿨라니 호텔의 레스토랑. 라이브 음악과 훌라 공연이 로맨틱해요.", icon: "music_note" }, { title: "레오나즈 베이커리", description: "말라사다(도넛) 맛집. 드라이브 출발 전 들러 간식으로 챙기세요.", icon: "bakery_dining"}], details: [{title:"렌터카 필수", description:"동부 해안의 아름다운 스팟들을 자유롭게 둘러보려면 렌터카 이용이 필수적입니다.", icon:"directions_car"}, {title:"추천 스팟", description:"마카푸우 포인트 외에도 할로나 블로우홀, 샌디 비치 등 멋진 해안 절경이 이어집니다.", icon:"add_a_photo"}] }},
-                { id: 'day-6', type: 'day', label: 'Day 6', data: { day: 6, date: "2025.07.12 (토)", title: "새로운 숙소, 새로운 설렘", schedule: [{ time: "10:30", description: "쉐라톤 체크아웃 후 짐 보관", icon: "luggage" }, { time: "11:00", description: "알라모아나 쇼핑센터에서 쇼핑 및 점심 식사", icon: "local_mall" }, { time: "15:30", description: "아웃리거 와이키키 비치 리조트 체크인", icon: "hotel" }, { time: "저녁", description: "호텔 1층 '듀크스 와이키키'에서 활기찬 저녁", icon: "celebration" }], recommendations: [{ title: "듀크스 와이키키", description: "해변 바로 앞의 활기찬 분위기. 예약 없이는 대기가 길 수 있어요.", icon: "restaurant" }, { title: "아일랜드 빈티지 커피", description: "아사이볼 맛집. 쇼핑 중 간식으로 추천해요.", icon: "local_cafe"}], details: [{title:"숙소 정보", description:"아웃리거 리조트는 조식이 포함되어 있으며, 클럽 라운지 이용이 가능한지 확인해보세요. 저녁 해피아워도 훌륭합니다.", icon:"hotel"}, {title:"쇼핑 팁", description:"알라모아나 센터는 매우 넓습니다. 미리 가고 싶은 매장의 위치를 파악해두면 시간을 절약할 수 있습니다.", icon:"map"}] }},
-                { id: 'day-7', type: 'day', label: 'Day 7', data: { day: 7, date: "2025.07.13 (일)", title: "와이키키의 마지막 하루, 온전히 즐기기", schedule: [{ time: "09:00", description: "아웃리거에서 여유롭게 조식 즐기기", icon: "breakfast_dining" }, { time: "10:30", description: "와이키키 해변에서 마지막 해수욕 또는 서핑 레슨", icon: "surfing" }, { time: "15:00", description: "칼라카우아 애비뉴에서 기념품 쇼핑하기", icon: "redeem" }, { time: "18:00", description: "가장 로맨틱한 마지막 저녁 식사", icon: "nightlife" }], recommendations: [{ title: "훌라 그릴", description: "듀크스 위층에 위치. 좀 더 차분하고 로맨틱한 분위기.", icon: "restaurant" }, { title: "미셸스 앳 더 콜로니 서프", description: "최고의 오션프론트 파인 다이닝. 특별한 마지막 밤을 위해 추천.", icon: "dinner_dining" }], details: [{title:"서핑 레슨", description:"와이키키 해변에는 초보자를 위한 서핑 스쿨이 많습니다. 당일 신청도 가능하니 도전해보세요.", icon:"surfing"}, {title:"기념품", description:"ABC 스토어 외에도 인터내셔널 마켓 플레이스, 로얄 하와이안 센터에 다양한 기념품 가게들이 있습니다.", icon:"shopping_bag"}] }},
-                { id: 'day-8', type: 'day', label: 'Day 8', data: { day: 8, date: "2025.07.14 (월)", title: "아쉬운 작별, 소중한 추억을 안고", schedule: [{ time: "09:00", description: "마지막 조식 후 짐 정리하기", icon: "local_cafe" }, { time: "10:30", description: "체크아웃 후 마지막으로 와이키키 둘러보기", icon: "shopping_bag" }, { time: "11:20", description: "예약된 차량으로 공항 이동", icon: "airport_shuttle" }, { time: "14:20", description: "호놀룰루 공항에서 한국으로 출발", icon: "flight_takeoff" }], recommendations: [], details: [{title:"체크아웃 후 짐 보관", description:"호텔 컨시어지에 짐을 맡기고 비행기 시간까지 가볍게 주변을 둘러보거나 마지막 식사를 즐기세요.", icon:"luggage"}] }},
-                { id: 'precautions', type: 'section', label: '주의사항', data: { title: '안전하고 즐거운 여행을 위한 주의사항', icon: 'gpp_good', content: [ { category: '안전', items: ['강력한 자외선에 대비해 선크림, 모자, 선글라스는 필수입니다.', '차량 내에 귀중품을 두지 마세요. 주차 시 모든 물건을 가지고 내리세요.', '늦은 밤 인적이 드문 곳은 피하고, 와이키키 중심가에서 활동하세요.'] }, { category: '자연보호', items: ['반드시 산호초 보호(Reef-Safe) 선크림을 사용해주세요.', '바다거북이나 물개를 만지거나 너무 가까이 다가가지 마세요. (법적 처벌 대상)', '지정된 장소에만 쓰레기를 버리고, 해변을 깨끗하게 사용해주세요.'] }, { category: '문화 및 에티켓', items: ['레스토랑, 택시 등 서비스 이용 시 15~20%의 팁을 주는 것이 일반적입니다.', '하와이 원주민 문화와 유적지를 존중하는 마음을 가져주세요.'] } ] }},
-                { id: 'packing-list', type: 'section', label: '준비물', data: { title: '잊지 말고 챙겨야 할 준비물 리스트', icon: 'luggage', content: [ { category: '필수 품목', items: ['여권 및 사본, ESTA 출력본', '항공권(E-ticket)', '국제운전면허증 및 국내면허증', '해외 사용 가능 신용카드, 약간의 현금(달러)'] }, { category: '의류', items: ['수영복, 래시가드, 비치 커버업', '여름옷 여러 벌, 스마트 캐주얼 1벌 (고급 레스토랑용)', '가벼운 가디건이나 바람막이 (냉방 대비)'] }, { category: '물놀이/기타', items: ['산호초 보호 선크림, 알로에 젤', '아쿠아슈즈, 방수팩', '상비약 (소화제, 진통제, 멀미약, 방수밴드 등)', '보조배터리, 카메라, 충전기'] } ] }}
-            ]
-        };
-
-        // --- 앱 초기화 ---
+        function initializeChart() {
+            const ctx = document.getElementById('activityChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['1일차', '2일차', '3일차', '4일차', '5일차', '6일차', '7일차', '8일차'],
+                    datasets: [{
+                        label: '활동 강도 (1-10)',
+                        data: [3, 4, 7, 5, 6, 2, 2, 1],
+                        backgroundColor: [
+                            'rgba(20, 184, 166, 0.6)', /* teal-600 */
+                            'rgba(15, 118, 110, 0.6)', /* teal-700 */
+                            'rgba(245, 158, 11, 0.6)', /* amber-500 */
+                            'rgba(15, 118, 110, 0.6)', /* teal-700 */
+                            'rgba(245, 158, 11, 0.6)', /* amber-500 */
+                            'rgba(20, 184, 166, 0.6)', /* teal-600 */
+                            'rgba(20, 184, 166, 0.6)', /* teal-600 */
+                            'rgba(20, 184, 166, 0.6)' /* teal-600 */
+                        ],
+                        borderColor: [
+                            'rgba(20, 184, 166, 1)',
+                             'rgba(15, 118, 110, 1)',
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(15, 118, 110, 1)',
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(20, 184, 166, 1)',
+                            'rgba(20, 184, 166, 1)',
+                            'rgba(20, 184, 166, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            ticks: {
+                                stepSize: 2
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
         document.addEventListener('DOMContentLoaded', () => {
-            const app = new ItineraryApp(
-                '#app', 
-                '#nav-tabs', 
-                '#main-content', 
-                appData
-            );
-            app.init();
+            renderContent(0);
+            navButtons.forEach(button => {
+                button.addEventListener('click', handleNavClick);
+            });
+            
+            document.getElementById('close-modal-btn').addEventListener('click', () => {
+                document.getElementById('info-modal').classList.add('hidden');
+            });
+
+            document.getElementById('info-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'info-modal') {
+                    document.getElementById('info-modal').classList.add('hidden');
+                }
+            });
         });
+
     </script>
+
 </body>
 </html>
